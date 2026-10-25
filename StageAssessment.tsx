@@ -1,5 +1,6 @@
 
 import { useMemo, useState } from "react";
+import "./StageAssessment.css";
 
 type Level = "A0" | "A1" | "A2" | "B1";
 
