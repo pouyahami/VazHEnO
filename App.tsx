@@ -761,6 +761,7 @@ function App() {
             <button onClick={() => go("home")}>صفحهٔ اصلی</button>
             <button onClick={() => go("path")}>مسیر یادگیری</button>
             <button onClick={() => go("skills")}>مهارت‌ها</button>
+            <button onClick={() => go("assessment")}>ارزیابی مرحله‌ای</button>
           </nav>
           <div className="top-actions">
             <button className="button button-ghost small-button" onClick={() => go("dashboard")}>فضای یادگیری</button>
@@ -830,6 +831,7 @@ function App() {
               ["practice", "جمله‌سازی", "✎"],
               ["review", "مرور هوشمند", "↻"],
               ["skills", "مهارت‌ها", "◉"],
+              ["assessment", "ارزیابی مرحله‌ای", "✓"],
               ["settings", "تنظیمات", "⚙"],
             ] as [Page, string, string][]).map(([id, label, icon]) => (
               <button key={id} className={`sidebar-link ${page === id ? "active" : ""}`} onClick={() => go(id)}>
@@ -842,6 +844,7 @@ function App() {
           </aside>
 
           <section className="workspace-content">
+            {page === "assessment" && <StageAssessment onBack={() => go("dashboard")} />}
             {page === "dashboard" && (
               <>
                 <div className="page-heading"><div><span className="eyebrow">فضای شخصی تو</span><h1>خوش برگشتی، {saved.userName}! 👋</h1><p>هر روز کمی تمرین، تو را جلوتر می‌برد.</p></div><button className="button button-primary" onClick={() => startLesson(saved.currentLessonId)}>ادامهٔ یادگیری ←</button></div>
