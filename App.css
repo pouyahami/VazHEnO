@@ -2141,3 +2141,28 @@ button:not(:disabled) {
 .onboarding-note { margin:16px 0; padding:13px 15px; border-radius:12px; background:#f7f5ff; color:#7164a9; font-size:11px; line-height:1.9; }
 .onboarding-skip { display:block; margin:14px auto 0; }
 @media (max-width:600px) { .placement-navigation { position:sticky; bottom:8px; padding:8px; background:#ffffffee; backdrop-filter:blur(8px); border-radius:14px; z-index:2; } .placement-navigation .button { flex:1; } .onboarding-goals { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+
+/* Real page-turn feedback for lesson swipes */
+.lesson-slide { position:relative; overflow:hidden; }
+.lesson-slide.page-turning { pointer-events:none; }
+.lesson-slide.page-turning .lesson-main-card { transform-style:preserve-3d; transform-origin:left center; backface-visibility:hidden; }
+.lesson-slide.page-turning.turn-next .lesson-main-card { animation:page-turn-next 520ms cubic-bezier(.22,.72,.22,1) both; }
+.lesson-slide.page-turning.turn-previous .lesson-main-card { animation:page-turn-previous 520ms cubic-bezier(.22,.72,.22,1) both; transform-origin:right center; }
+@keyframes page-turn-next {
+  0% { opacity:1; transform:perspective(1200px) rotateY(0deg) scale(1); filter:brightness(1); }
+  42% { opacity:.72; transform:perspective(1200px) rotateY(-13deg) scale(.985) translateX(-10px); filter:brightness(.92); box-shadow:18px 10px 35px #19103b25; }
+  100% { opacity:1; transform:perspective(1200px) rotateY(0deg) scale(1); filter:brightness(1); }
+}
+@keyframes page-turn-previous {
+  0% { opacity:1; transform:perspective(1200px) rotateY(0deg) scale(1); }
+  42% { opacity:.72; transform:perspective(1200px) rotateY(13deg) scale(.985) translateX(10px); filter:brightness(.92); box-shadow:-18px 10px 35px #19103b25; }
+  100% { opacity:1; transform:perspective(1200px) rotateY(0deg) scale(1); filter:brightness(1); }
+}
+.page-turn-status { position:sticky; top:10px; z-index:5; width:max-content; max-width:calc(100% - 24px); margin:0 auto 14px; display:flex; align-items:center; gap:10px; padding:10px 16px; border:1px solid #d9d0ff; border-radius:999px; color:#6044c8; background:#ffffffed; box-shadow:0 8px 28px #39208020; font-size:12px; font-weight:800; animation:turn-status-in 180ms ease both; }
+.page-turn-icon { display:grid; place-items:center; width:25px; height:25px; border-radius:8px; background:#eee9ff; font-size:18px; animation:turn-book 520ms ease-in-out infinite; }
+.page-turn-dots { letter-spacing:2px; animation:turn-dots 700ms ease-in-out infinite; }
+@keyframes turn-book { 0%,100% { transform:rotateY(0deg); } 50% { transform:rotateY(180deg); } }
+@keyframes turn-dots { 0%,100% { opacity:.25; } 50% { opacity:1; } }
+@keyframes turn-status-in { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
+@media (prefers-reduced-motion:reduce) { .lesson-slide.page-turning .lesson-main-card, .page-turn-icon, .page-turn-dots { animation-duration:1ms !important; } }
