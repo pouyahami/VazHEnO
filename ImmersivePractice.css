@@ -1,0 +1,13 @@
+.immersive-practice{margin-top:22px;display:grid;gap:18px;border:1px solid rgba(120,100,255,.24);background:linear-gradient(145deg,rgba(106,78,220,.07),rgba(50,160,190,.05))}
+.immersive-header h3{margin:7px 0}.immersive-header p,.immersive-muted{color:var(--muted,#697386);line-height:1.8}
+.immersive-scene{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:18px;border-radius:18px;background:rgba(127,112,255,.09)}
+.immersive-illustration{font-size:clamp(2rem,5vw,3.5rem);min-width:100px;text-align:center;padding:12px;background:rgba(255,255,255,.65);border-radius:16px}
+.immersive-scene>div:nth-child(2){flex:1;min-width:160px}.immersive-scene span{font-size:.82rem;color:var(--muted,#697386)}.immersive-scene h4{margin:5px 0}.immersive-scene p{margin:0;color:var(--muted,#697386);font-size:.9rem}
+.immersive-speed{display:flex;align-items:center;gap:6px;font-size:.85rem}.immersive-speed select{padding:8px;border-radius:9px;border:1px solid #c8c5df;background:var(--surface,#fff)}
+.immersive-stage{padding:18px;border-radius:16px;background:var(--surface,#fff);border:1px solid rgba(130,130,160,.18)}.immersive-stage h4{margin:8px 0 12px}
+.immersive-step{font-size:.76rem;font-weight:800;letter-spacing:.04em;color:#7b61d1}.immersive-choices,.immersive-word-bank,.immersive-built{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+.immersive-choices button,.immersive-word-bank button,.immersive-built button{padding:10px 13px;border:1px solid #d7d5e5;border-radius:11px;background:var(--surface,#fff);cursor:pointer;color:var(--text,#25243a)}
+.immersive-choices button.is-selected{border-color:#8064df;background:#eee9ff}.immersive-choices button.is-correct{border-color:#24956d;background:#e6f7ef}.immersive-choices button.is-wrong{border-color:#cf6d72;background:#fff0f0}
+.immersive-word-bank button:disabled{opacity:.45}.immersive-built{min-height:46px;padding:10px;border:1px dashed #aaa5c7;border-radius:12px;align-items:center}.immersive-built span{color:var(--muted,#697386)}
+.immersive-actions{display:flex;gap:9px;flex-wrap:wrap}.immersive-result{padding:12px;border-radius:11px;background:#fff0f0;line-height:1.8}.immersive-result strong{display:block;margin-top:5px}.immersive-result.good{background:#e6f7ef;color:#176b4c}
+.immersive-hint{padding:10px 12px;background:rgba(105,90,200,.08);border-radius:10px}.immersive-speak{background:rgba(50,160,190,.06)}
