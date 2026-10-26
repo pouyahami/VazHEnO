@@ -2118,3 +2118,26 @@ button:not(:disabled) {
 .integrated-note { margin: 16px 0 0; padding: 12px 14px; border-radius: 12px; background: #f3f0ff; color: #5e4bb2; font-size: 13px; line-height: 1.8; }
 @media (max-width: 900px) { .profile-skill-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .profile-skill-grid, .integrated-skill-actions { grid-template-columns: 1fr; } .integrated-practice { padding: 14px; } .integrated-skill { padding: 12px; } }
+
+
+/* Guided onboarding, slide gestures and placement navigation */
+.placement-navigation { display:flex; justify-content:space-between; gap:12px; margin-top:10px; }
+.placement-navigation .button { min-width:112px; }
+.placement-navigation .button:disabled { opacity:.4; cursor:not-allowed; }
+.swipe-hint { margin: -8px 0 18px; color:#85839b; font-size:11px; text-align:center; }
+.lesson-slide { touch-action:pan-y; }
+.lesson-main-card { animation: lesson-enter .24s ease both; }
+@keyframes lesson-enter { from { opacity:.7; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.onboarding-wrap { max-width:760px; margin:0 auto; }
+.onboarding-card { padding:clamp(22px,4vw,38px); }
+.onboarding-step { display:flex; align-items:flex-start; gap:14px; margin:8px 0 14px; }
+.onboarding-step > span { display:grid; place-items:center; flex:0 0 42px; height:42px; border-radius:13px; color:#7655e8; background:#f0ecff; font-weight:900; }
+.onboarding-step h3 { margin:0 0 5px; font-size:16px; }
+.onboarding-step p { margin:0; color:#85839b; font-size:12px; line-height:1.8; }
+.onboarding-goals { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin:12px 0 22px; }
+.goal-choice { display:flex; flex-direction:column; gap:7px; align-items:flex-start; padding:14px; border:1px solid #e7e4f4; border-radius:12px; background:#fff; color:#55546e; text-align:right; cursor:pointer; }
+.goal-choice span { color:#9291a4; font-size:10px; }
+.goal-choice.selected { border-color:#8b72ee; background:#f6f3ff; color:#6548d3; box-shadow:0 0 0 2px #8b72e822; }
+.onboarding-note { margin:16px 0; padding:13px 15px; border-radius:12px; background:#f7f5ff; color:#7164a9; font-size:11px; line-height:1.9; }
+.onboarding-skip { display:block; margin:14px auto 0; }
+@media (max-width:600px) { .placement-navigation { position:sticky; bottom:8px; padding:8px; background:#ffffffee; backdrop-filter:blur(8px); border-radius:14px; z-index:2; } .placement-navigation .button { flex:1; } .onboarding-goals { grid-template-columns:repeat(2,minmax(0,1fr)); } }
