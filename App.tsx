@@ -11,6 +11,7 @@ type Page =
   | "home"
   | "dashboard"
   | "placement"
+  | "onboarding"
   | "path"
   | "lesson"
   | "practice"
@@ -615,6 +616,7 @@ function App() {
   const [placementIndex, setPlacementIndex] = useState(0);
   const [placementAnswers, setPlacementAnswers] = useState<Record<string, string>>({});
   const [placementFinished, setPlacementFinished] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [practiceWords, setPracticeWords] = useState<string[]>([]);
   const [practiceFeedback, setPracticeFeedback] = useState("");
@@ -745,6 +747,23 @@ function App() {
 
   const nextLesson = () => {
     const next = Math.min(lessonIndex + 1, lessons.length - 1);
+    setLessonIndex(next);
+    updateSaved({ currentLessonId: lessons[next].id });
+    setLessonChoice("");
+    setLessonChecked(false);
+    setNotice("");
+  };
+
+  const previousPlacement = () => {
+    if (placementIndex <= 0) return;
+    const previousIndex = placementIndex - 1;
+    setPlacementIndex(previousIndex);
+    setSelectedAnswer(placementAnswers[placementQuestions[previousIndex]?.id] ?? "");
+    setNotice("");
+  };
+
+  const moveLesson = (direction: -1 | 1) => {
+    const next = Math.max(0, Math.min(lessons.length - 1, lessonIndex + direction));
     setLessonIndex(next);
     updateSaved({ currentLessonId: lessons[next].id });
     setLessonChoice("");
@@ -934,7 +953,7 @@ function App() {
                       {currentPlacement?.options.map((option, index) => <button key={option} className={`quiz-option ${selectedAnswer === option ? "selected" : ""}`} onClick={() => setSelectedAnswer(option)}><span className="option-letter">{String.fromCharCode(65 + index)}</span>{option}<span className="option-check">{selectedAnswer === option ? "✓" : ""}</span></button>)}
                     </div>
                     {notice && <p className="notice">{notice}</p>}
-                    <button className="button button-primary button-large full-button" onClick={submitPlacement}>{placementIndex === placementQuestions.length - 1 ? "مشاهدهٔ نتیجه" : "سؤال بعدی"} ←</button>
+                    <div className="placement-navigation"><button className="button button-ghost" onClick={previousPlacement} disabled={placementIndex === 0}>← Back</button><button className="button button-primary button-large" onClick={submitPlacement}>{placementIndex === placementQuestions.length - 1 ? "View result" : "Next"} →</button></div>
                     <p className="quiz-footnote">آزمون شامل ۳۶ سؤال در شش سطح A0 تا C1 است و از آسان به سخت پیش می‌رود. آزمون‌های بین‌المللی تعداد ثابتی ندارند؛ این آزمون از چارچوب CEFR الهام گرفته و رسمی نیست. شنیدن، گفتار و نوشتار نیز برای ارزیابی کامل باید جداگانه سنجیده شوند.</p>
                   </div>
                 ) : (
@@ -943,10 +962,26 @@ function App() {
                     <h2>سطح پیشنهادی تو: {estimatedLevel}</h2>
                     <div className="score-circle"><strong>{placementScore}</strong><span>از {placementQuestions.length}</span></div>
                     <p>پاسخ درست: {placementScore} از {placementQuestions.length}. سطح پیشنهادی بر اساس عملکرد در سؤال‌های هر سطح محاسبه شده است؛ این نتیجه تخمینی است و آزمون رسمی CEFR محسوب نمی‌شود.</p>
-                    <button className="button button-primary button-large full-button" onClick={() => { const first = lessons.find((lesson) => lesson.level === estimatedLevel) ?? lessons[0]; startLesson(first.id); }}>شروع دورهٔ {estimatedLevel} ←</button>
+                    <button className="button button-primary button-large full-button" onClick={() => go("onboarding")}>ساخت مسیر یادگیری من · Continue →</button>
                     <button className="text-button" onClick={startQuiz}>آزمون تازه با سؤال‌های متفاوت</button>
                   </div>
                 )}
+              </div>
+            )}
+
+            {page === "onboarding" && (
+              <div className="onboarding-wrap">
+                <div className="page-heading"><div><span className="eyebrow">قدم بعدی · ۱ از ۲</span><h1>مسیرت را برای خودت آماده کنیم</h1><p>تعیین سطح تمام شد؛ فقط چند انتخاب ساده مانده. هرکدام را می‌توانی بعداً تغییر بدهی.</p></div><span className="level-pill">سطح پیشنهادی {saved.placementResult ?? saved.level}</span></div>
+                <div className="panel onboarding-card">
+                  <div className="onboarding-step"><span>01</span><div><h3>دوست داری با چه اسمی صدایت کنیم؟</h3><p>این نام فقط برای نمایش در فضای یادگیری همین مرورگر است.</p></div></div>
+                  <label className="field-label" htmlFor="onboarding-name">نام نمایشی (اختیاری)</label>
+                  <input id="onboarding-name" className="text-input" value={saved.userName === "دوست زبان‌آموز" ? "" : saved.userName} onChange={(event) => updateSaved({ userName: event.target.value })} placeholder="مثلاً پویا" />
+                  <div className="onboarding-step"><span>02</span><div><h3>روزانه چقدر زمان داری؟</h3><p>هدف سبک و قابل انجام، بهتر از برنامهٔ سنگین و ناپایدار است.</p></div></div>
+                  <div className="onboarding-goals">{["۵ دقیقه", "۱۰ دقیقه", "۱۵ دقیقه", "۲۰ دقیقه", "۳۰ دقیقه"].map((goal) => <button key={goal} className={saved.dailyGoal === goal ? "goal-choice selected" : "goal-choice"} onClick={() => updateSaved({ dailyGoal: goal })} aria-pressed={saved.dailyGoal === goal}><strong>{goal}</strong><span>{goal === "۵ دقیقه" ? "شروع خیلی سبک" : goal === "۱۰ دقیقه" ? "عادت روزانه" : goal === "۱۵ دقیقه" ? "پیشنهاد واژه‌نو" : goal === "۲۰ دقیقه" ? "تمرین بیشتر" : "مسیر فشرده‌تر"}</span></button>)}</div>
+                  <div className="onboarding-note">لازم نیست الان حساب کاربری بسازی یا اطلاعات شخصی حساسی بدهی. پیشرفت فعلی در همین مرورگر ذخیره می‌شود.</div>
+                  <button className="button button-primary button-large full-button" onClick={() => { const first = lessons.find((lesson) => lesson.level === (saved.placementResult ?? saved.level)) ?? lessons[0]; updateSaved({ userName: saved.userName.trim() || "دوست زبان‌آموز" }); startLesson(first.id); }}>شروع اولین درس · Start learning →</button>
+                  <button className="text-button onboarding-skip" onClick={() => { const first = lessons.find((lesson) => lesson.level === (saved.placementResult ?? saved.level)) ?? lessons[0]; startLesson(first.id); }}>فعلاً رد می‌کنم</button>
+                </div>
               </div>
             )}
 
@@ -975,9 +1010,9 @@ function App() {
             )}
 
             {page === "lesson" && (
-              <div className="lesson-page">
+              <div className="lesson-page lesson-slide" onTouchStart={(event) => setTouchStartX(event.touches[0]?.clientX ?? null)} onTouchEnd={(event) => { if (touchStartX === null) return; const delta = event.changedTouches[0]?.clientX - touchStartX; if (Math.abs(delta) > 65) moveLesson(delta > 0 ? -1 : 1); setTouchStartX(null); }}>
                 <div className="page-heading"><div><span className="eyebrow">درس تعاملی · {currentLesson.level}</span><h1>{currentLesson.title}</h1><p>{currentLesson.category} · حدود {currentLesson.minutes} دقیقه</p></div><span className="level-pill">درس {lessonIndex + 1} از {lessons.length}</span></div>
-                <div className="lesson-progress"><span style={{ width: `${((lessonIndex + 1) / lessons.length) * 100}%` }} /></div>
+                <div className="lesson-progress"><span style={{ width: `${((lessonIndex + 1) / lessons.length) * 100}%` }} /></div><p className="swipe-hint">← برای درس بعدی به چپ بکش · برای برگشت به راست بکش →</p>
                 <article className="panel lesson-main-card">
                   <div className="lesson-step-label">مفهوم اصلی</div>
                   <h2>{currentLesson.title}</h2>
@@ -1008,9 +1043,9 @@ function App() {
                   </section>
                   {notice && <p className="notice">{notice}</p>}
                   <div className="lesson-controls">
-                    <button className="button button-ghost" disabled={lessonIndex === 0} onClick={() => { setLessonIndex(Math.max(0, lessonIndex - 1)); setLessonChoice(""); setLessonChecked(false); }}>→ درس قبل</button>
+                    <button className="button button-ghost" disabled={lessonIndex === 0} onClick={() => moveLesson(-1)}>→ درس قبل</button>
                     <button className="button button-ghost" onClick={completeLesson}>ثبت تکمیل درس ✓</button>
-                    <button className="button button-primary" onClick={nextLesson}>{lessonIndex === lessons.length - 1 ? "آخرین درس" : "درس بعد ←"}</button>
+                    <button className="button button-primary" onClick={() => moveLesson(1)} disabled={lessonIndex === lessons.length - 1}>{lessonIndex === lessons.length - 1 ? "آخرین درس" : "درس بعد ←"}</button>
                   </div>
                 </article>
               </div>
