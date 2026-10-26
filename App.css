@@ -2095,3 +2095,26 @@ button:not(:disabled) {
 .grammar-examples p { margin: 7px 0; line-height: 2; }
 .grammar-mistake { border-right: 3px solid #e5a34d; padding: 10px 14px; background: #fff8ec; border-radius: 8px; }
 .grammar-mistake p { margin: 0; line-height: 2; }
+
+
+/* Integrated course and per-skill learner profile */
+.profile-skills { margin: 22px 0; }
+.profile-skill-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.profile-skill { padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: #fbfbff; min-width: 0; }
+.profile-skill-top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.profile-skill-top > div { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.profile-skill-top strong { color: var(--navy); }
+.profile-skill-top small, .profile-skill > small { color: var(--muted); font-size: 11px; }
+.profile-skill-top b { color: var(--purple); white-space: nowrap; }
+.profile-skill-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; background: #eeeaff; color: var(--purple); font-size: 18px; }
+.profile-skill .mini-progress { margin-bottom: 8px; }
+.integrated-practice { margin-top: 20px; padding: 22px; }
+.integrated-skill-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+.integrated-skill { display: flex; align-items: flex-start; gap: 14px; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: #fcfcff; min-width: 0; }
+.integrated-skill > div { min-width: 0; flex: 1; }
+.integrated-skill strong { display: block; color: var(--navy); margin-bottom: 6px; }
+.integrated-skill p { color: var(--muted); font-size: 13px; line-height: 1.8; margin: 0 0 12px; }
+.integrated-writing .text-input { width: 100%; margin: 4px 0 10px; }
+.integrated-note { margin: 16px 0 0; padding: 12px 14px; border-radius: 12px; background: #f3f0ff; color: #5e4bb2; font-size: 13px; line-height: 1.8; }
+@media (max-width: 900px) { .profile-skill-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .profile-skill-grid, .integrated-skill-actions { grid-template-columns: 1fr; } .integrated-practice { padding: 14px; } .integrated-skill { padding: 12px; } }
