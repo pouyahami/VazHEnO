@@ -2082,3 +2082,16 @@ button:not(:disabled) {
     flex-wrap: wrap;
   }
 }
+
+
+/* Clear, step-by-step grammar teaching blocks */
+.grammar-guide { margin: 22px 0; padding: 22px; border: 1px solid #e5e0fb; border-radius: 16px; background: linear-gradient(145deg, #faf9ff, #fff); color: #30314d; }
+.grammar-guide h3 { margin: 0 0 12px; color: #5d43c5; font-size: 19px; }
+.grammar-guide > p { line-height: 2.1; margin: 0 0 16px; }
+.grammar-formula { display: grid; gap: 8px; padding: 14px; margin: 14px 0; border-radius: 12px; background: #f0edff; }
+.grammar-formula span { font-weight: 700; line-height: 2; overflow-wrap: anywhere; }
+.grammar-examples { padding: 14px 0; }
+.grammar-examples > strong, .grammar-mistake > strong { display: block; margin-bottom: 8px; }
+.grammar-examples p { margin: 7px 0; line-height: 2; }
+.grammar-mistake { border-right: 3px solid #e5a34d; padding: 10px 14px; background: #fff8ec; border-radius: 8px; }
+.grammar-mistake p { margin: 0; line-height: 2; }
