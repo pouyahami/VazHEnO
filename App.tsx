@@ -617,6 +617,8 @@ function App() {
   const [placementAnswers, setPlacementAnswers] = useState<Record<string, string>>({});
   const [placementFinished, setPlacementFinished] = useState(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [isPageTurning, setIsPageTurning] = useState(false);
+  const [turnDirection, setTurnDirection] = useState<-1 | 1>(1);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [practiceWords, setPracticeWords] = useState<string[]>([]);
   const [practiceFeedback, setPracticeFeedback] = useState("");
@@ -763,12 +765,19 @@ function App() {
   };
 
   const moveLesson = (direction: -1 | 1) => {
+    if (isPageTurning) return;
     const next = Math.max(0, Math.min(lessons.length - 1, lessonIndex + direction));
-    setLessonIndex(next);
-    updateSaved({ currentLessonId: lessons[next].id });
-    setLessonChoice("");
-    setLessonChecked(false);
-    setNotice("");
+    if (next === lessonIndex) return;
+    setTurnDirection(direction);
+    setIsPageTurning(true);
+    window.setTimeout(() => {
+      setLessonIndex(next);
+      updateSaved({ currentLessonId: lessons[next].id });
+      setLessonChoice("");
+      setLessonChecked(false);
+      setNotice("");
+      setIsPageTurning(false);
+    }, 520);
   };
 
   const markReviewed = (word: string, confidence: "easy" | "hard") => {
@@ -1010,9 +1019,9 @@ function App() {
             )}
 
             {page === "lesson" && (
-              <div className="lesson-page lesson-slide" onTouchStart={(event) => setTouchStartX(event.touches[0]?.clientX ?? null)} onTouchEnd={(event) => { if (touchStartX === null) return; const delta = event.changedTouches[0]?.clientX - touchStartX; if (Math.abs(delta) > 65) moveLesson(delta > 0 ? -1 : 1); setTouchStartX(null); }}>
+              <div className={`lesson-page lesson-slide ${isPageTurning ? `page-turning turn-${turnDirection === 1 ? "next" : "previous"}` : ""}`} onTouchStart={(event) => { if (!isPageTurning) setTouchStartX(event.touches[0]?.clientX ?? null); }} onTouchEnd={(event) => { if (touchStartX === null || isPageTurning) return; const delta = event.changedTouches[0]?.clientX - touchStartX; if (Math.abs(delta) > 65) moveLesson(delta > 0 ? 1 : -1); setTouchStartX(null); }}>
                 <div className="page-heading"><div><span className="eyebrow">درس تعاملی · {currentLesson.level}</span><h1>{currentLesson.title}</h1><p>{currentLesson.category} · حدود {currentLesson.minutes} دقیقه</p></div><span className="level-pill">درس {lessonIndex + 1} از {lessons.length}</span></div>
-                <div className="lesson-progress"><span style={{ width: `${((lessonIndex + 1) / lessons.length) * 100}%` }} /></div><p className="swipe-hint">← برای درس بعدی به چپ بکش · برای برگشت به راست بکش →</p>
+                <div className="lesson-progress"><span style={{ width: `${((lessonIndex + 1) / lessons.length) * 100}%` }} /></div><p className="swipe-hint">از چپ به راست بکش تا صفحهٔ بعدی ورق بخورد ← · از راست به چپ بکش تا برگردی →</p>{isPageTurning && <div className="page-turn-status" role="status" aria-live="polite"><span className="page-turn-icon" aria-hidden="true">▤</span><span>در حال ورق زدن صفحه...</span><span className="page-turn-dots" aria-hidden="true">•••</span></div>}
                 <article className="panel lesson-main-card">
                   <div className="lesson-step-label">مفهوم اصلی</div>
                   <h2>{currentLesson.title}</h2>
