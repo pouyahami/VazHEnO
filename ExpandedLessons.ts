@@ -7,9 +7,20 @@ type Lesson = {
 function lesson(
   id: string, level: Lesson["level"], title: string, category: string, minutes: number,
   explanation: string, example: string, translation: string, tip: string,
-  question: string, options: string[], answer: string, feedback: string,
-  words: Lesson["words"],
+  question: string, ...parts: Array<string | Lesson["words"]>
 ): Lesson {
+  // Lesson entries may list answer choices as separate strings or as one array.
+  // Keep the final three parts as answer, feedback, and vocabulary.
+  const wordsPart = parts[parts.length - 1];
+  const feedbackPart = parts[parts.length - 2];
+  const answerPart = parts[parts.length - 3];
+  const optionParts = parts.slice(0, -3);
+  const options = optionParts.flatMap((part) =>
+    Array.isArray(part) ? part as string[] : [part as string]
+  );
+  const words = Array.isArray(wordsPart) ? wordsPart as Lesson["words"] : [];
+  const answer = typeof answerPart === "string" ? answerPart : "";
+  const feedback = typeof feedbackPart === "string" ? feedbackPart : "";
   return { id, level, title, category, minutes, explanation, example, translation, tip, question, options, answer, feedback, words };
 }
 
