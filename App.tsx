@@ -7,6 +7,7 @@ import SpeakingPractice from "./SpeakingPractice";
 import ImmersivePractice from "./ImmersivePractice";
 import DailyLearning from "./DailyLearning";
 import AlphabetCourse from "./AlphabetCourse";
+import IeltsCourse from "./IeltsCourse";
 import { expandedLessons } from "./ExpandedLessons";
 
 type Level = "A0" | "A1" | "A2" | "B1" | "B2" | "C1";
@@ -1010,6 +1011,7 @@ function App() {
                 <div className="path-overview panel"><div><span>پیشرفت دوره</span><strong>{progress}٪</strong></div><div className="mini-progress"><span style={{ width: `${progress}%` }} /></div><p>{completedCount} درس از {lessons.length} درس تکمیل شده است.</p></div>
                 <AlphabetCourse />
                 <DailyLearning lessons={lessons} level={saved.placementResult ?? saved.level} completedLessonIds={saved.completedLessons} onOpenLesson={startLesson} />
+                <IeltsCourse />
                 {LEVELS.map((level) => {
                   const group = lessons.filter((lesson) => lesson.level === level);
                   return <div key={level} className="path-level-group">
