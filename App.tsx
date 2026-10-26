@@ -539,20 +539,6 @@ const placementPool: Question[] = [
   { id: "p-c1-6", level: "C1", question: "The findings, ___ preliminary, are promising.", options: ["albeit", "despite of", "whereas of", "unless"], answer: "albeit", explanation: "Albeit به معنی «هرچند» است و در این جمله به‌صورت پیونددهندهٔ فشرده به‌کار می‌رود." },
 ];
 
-
-  { id: "p-a0-5", level: "A0", question: "Choose the correct sentence.", options: ["They is at home.", "They are at home.", "They am at home.", "They be at home."], answer: "They are at home.", explanation: "They با are می‌آید." },
-  { id: "p-a0-6", level: "A0", question: "Choose the correct reply: 'How are you?'", options: ["I'm fine, thanks.", "I fine is.", "I have fine.", "I are good."], answer: "I'm fine, thanks.", explanation: "پاسخ رایج به How are you? عبارت I'm fine, thanks است." },
-  { id: "p-a1-5", level: "A1", question: "My sister doesn't ___ coffee.", options: ["likes", "like", "liking", "liked"], answer: "like", explanation: "پس از doesn't فعل اصلی به شکل پایه می‌آید." },
-  { id: "p-a1-6", level: "A1", question: "There are ___ apples on the table.", options: ["a little", "much", "a few", "any of"], answer: "a few", explanation: "Apples قابل‌شمارش و جمع است؛ a few برای تعداد کم به‌کار می‌رود." },
-  { id: "p-a2-5", level: "A2", question: "I have known him ___ five years.", options: ["since", "for", "from", "during"], answer: "for", explanation: "For مدت زمان را نشان می‌دهد؛ five years یک مدت است." },
-  { id: "p-a2-6", level: "A2", question: "You look tired. You ___ take a break.", options: ["should", "should to", "are", "would to"], answer: "should", explanation: "برای توصیه از should + شکل پایهٔ فعل استفاده می‌کنیم." },
-  { id: "p-b1-5", level: "B1", question: "I wish I ___ more free time.", options: ["have", "will have", "had", "am having"], answer: "had", explanation: "برای آرزوی خلاف واقع در زمان حال، پس از I wish از گذشتهٔ ساده استفاده می‌شود." },
-  { id: "p-b1-6", level: "B1", question: "Despite ___ late, he joined the meeting.", options: ["be", "being", "was", "to be"], answer: "being", explanation: "پس از despite اسم یا شکل ing فعل می‌آید." },
-  { id: "p-b2-5", level: "B2", question: "No sooner ___ than the lights went out.", options: ["we arrived", "had we arrived", "we had arrive", "did we arrived"], answer: "had we arrived", explanation: "با No sooner در ابتدای جمله، وارونگی و معمولاً past perfect به‌کار می‌رود." },
-  { id: "p-b2-6", level: "B2", question: "The manager insisted that the report ___ revised.", options: ["is", "was", "be", "being"], answer: "be", explanation: "در ساختار رسمی insist that، شکل پایهٔ فعل در جملهٔ وابسته می‌آید." },
-  { id: "p-c1-5", level: "C1", question: "Choose the most natural collocation.", options: ["draw a conclusion", "pull a conclusion", "make a conclusion", "take a conclusion"], answer: "draw a conclusion", explanation: "Draw a conclusion هم‌نشینی طبیعی و رایج است." },
-  { id: "p-c1-6", level: "C1", question: "The findings, ___ preliminary, are promising.", options: ["albeit", "despite of", "whereas of", "unless"], answer: "albeit", explanation: "Albeit به معنی «هرچند» است و در این جمله به‌صورت پیونددهندهٔ فشرده به‌کار می‌رود." },
-
 const reviewWords = lessons.flatMap((lesson) =>
   lesson.words.map((word) => ({ ...word, lessonId: lesson.id, level: lesson.level })),
 );
