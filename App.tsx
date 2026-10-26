@@ -4,6 +4,7 @@ import "./App.css";
 import StageAssessment from "./StageAssessment";
 import ListeningPractice from "./ListeningPractice";
 import SpeakingPractice from "./SpeakingPractice";
+import { expandedLessons } from "./ExpandedLessons";
 
 type Level = "A0" | "A1" | "A2" | "B1" | "B2" | "C1";
 type Page =
@@ -538,6 +539,8 @@ const placementPool: Question[] = [
   { id: "p-c1-5", level: "C1", question: "Choose the most natural collocation.", options: ["draw a conclusion", "pull a conclusion", "make a conclusion", "take a conclusion"], answer: "draw a conclusion", explanation: "Draw a conclusion هم‌نشینی طبیعی و رایج است." },
   { id: "p-c1-6", level: "C1", question: "The findings, ___ preliminary, are promising.", options: ["albeit", "despite of", "whereas of", "unless"], answer: "albeit", explanation: "Albeit به معنی «هرچند» است و در این جمله به‌صورت پیونددهندهٔ فشرده به‌کار می‌رود." },
 ];
+
+lessons.push(...(expandedLessons as any));
 
 const reviewWords = lessons.flatMap((lesson) =>
   lesson.words.map((word) => ({ ...word, lessonId: lesson.id, level: lesson.level })),
