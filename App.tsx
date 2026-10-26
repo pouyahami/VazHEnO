@@ -773,14 +773,16 @@ function App() {
     if (next === lessonIndex) return;
     setTurnDirection(direction);
     setIsPageTurning(true);
+    // Reveal the next lesson beneath the turning sheet around the midpoint,
+    // so the animation uncovers new content instead of swapping after it ends.
     window.setTimeout(() => {
       setLessonIndex(next);
       updateSaved({ currentLessonId: lessons[next].id });
       setLessonChoice("");
       setLessonChecked(false);
       setNotice("");
-      setIsPageTurning(false);
-    }, 760);
+    }, 380);
+    window.setTimeout(() => setIsPageTurning(false), 760);
   };
 
   const markReviewed = (word: string, confidence: "easy" | "hard") => {
