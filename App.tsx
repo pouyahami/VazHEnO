@@ -553,27 +553,47 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 function makePlacement(previous: string[][]): Question[] {
-  const chosen = LEVELS.flatMap((level) => {
-    let pool = shuffle(placementPool.filter((question) => question.level === level));
-    const lastRun = previous[previous.length - 1] ?? [];
+  const lastRun = previous[previous.length - 1] ?? [];
+  // Six questions per CEFR band, presented from easier to harder.
+  return LEVELS.flatMap((level) => {
+    const pool = shuffle(placementPool.filter((question) => question.level === level));
     const fresh = pool.filter((question) => !lastRun.includes(question.id));
-    if (fresh.length >= 3) pool = fresh;
-    return pool.slice(0, 3);
+    return (fresh.length >= 6 ? fresh : pool).slice(0, 6);
   });
-  return shuffle(chosen);
 }
 
 function estimateLevel(answers: Record<string, string>): Level {
   let highest: Level = "A0";
   for (const level of LEVELS) {
-    const group = placementPool.filter((question) => question.level === level);
+    const group = placementPool.filter((question) => question.level === level && question.id in answers);
+    if (group.length === 0) break;
     const correct = group.filter((question) => answers[question.id] === question.answer).length;
-    if (correct >= 3) highest = level;
+    if (correct >= Math.ceil(group.length * (2 / 3))) highest = level;
     else break;
   }
   return highest;
 }
 
+const GRAMMAR_GUIDES: Record<string, { rule: string; form: string; examples: string[]; mistake: string }> = {
+  "a0-2": { rule: "ضمیر فاعلی نشان می‌دهد چه کسی یا چه چیزی کار را انجام می‌دهد. در انگلیسی معمولاً فاعل را حذف نمی‌کنیم.", form: "I / You / He / She / It / We / They + فعل", examples: ["I study English. — من انگلیسی می‌خوانم.", "They live here. — آن‌ها اینجا زندگی می‌کنند."], mistake: "برای یک مرد از he و برای یک زن از she استفاده کن؛ برای اشیا معمولاً it می‌آید." },
+  "a0-3": { rule: "فعل to be برای معرفی، توصیف و گفتن حالت یا مکان به‌کار می‌رود.", form: "I am · He/She/It is · You/We/They are", examples: ["I am ready. — من آماده‌ام.", "She is happy. — او خوشحال است.", "We are at home. — ما خانه هستیم."], mistake: "نگو I is یا they is؛ شکل فعل باید با فاعل هماهنگ باشد." },
+  "a0-4": { rule: "برای منفی کردن to be، کلمهٔ not را بعد از آن می‌آوریم. برای سؤال، فعل to be را قبل از فاعل قرار می‌دهیم.", form: "منفی: فاعل + am/is/are + not · سؤال: Am/Is/Are + فاعل ...?", examples: ["He is not busy. — او مشغول نیست.", "Are you ready? — آماده‌ای؟"], mistake: "با to be معمولاً do/does نمی‌آوریم؛ «Do you are ready?» نادرست است." },
+  "a1-1": { rule: "حال ساده برای عادت‌ها، برنامه‌های تکراری و واقعیت‌هاست. در جملهٔ مثبت، با he/she/it معمولاً به فعل s یا es اضافه می‌شود.", form: "I/You/We/They + فعل پایه · He/She/It + فعل s/es", examples: ["I play football every week. — هر هفته فوتبال بازی می‌کنم.", "She watches TV at night. — او شب‌ها تلویزیون تماشا می‌کند."], mistake: "بعد از does یا doesn't فعل را به شکل پایه برگردان: Does she work? نه Does she works?" },
+  "a1-2": { rule: "برای سؤال و منفی در حال ساده از do یا does کمک می‌گیریم. Does برای he/she/it و do برای I/you/we/they است.", form: "سؤال: Do/Does + فاعل + فعل پایه؟ · منفی: فاعل + don't/doesn't + فعل پایه", examples: ["Do you like tea? — چای دوست داری؟", "He doesn't work here. — او اینجا کار نمی‌کند."], mistake: "وقتی does یا doesn't داریم، به فعل اصلی s اضافه نکن." },
+  "a1-3": { rule: "حال استمراری کاری را نشان می‌دهد که همین حالا یا در یک دورهٔ موقت در جریان است.", form: "فاعل + am/is/are + فعل-ing", examples: ["I'm reading now. — الان دارم مطالعه می‌کنم.", "They are staying with us this week. — این هفته پیش ما می‌مانند."], mistake: "فعل کمکی to be را حذف نکن؛ «She working» جملهٔ کامل نیست." },
+  "a1-4": { rule: "گذشتهٔ ساده برای کاری است که در گذشته تمام شده؛ زمان‌هایی مثل yesterday و last week اغلب نشانهٔ آن هستند.", form: "مثبت: فاعل + فعل گذشته · منفی: didn't + فعل پایه · سؤال: Did + فاعل + فعل پایه؟", examples: ["We watched a film. — فیلمی تماشا کردیم.", "Did you go out? — بیرون رفتی؟"], mistake: "بعد از did/didn't شکل پایه می‌آید: Did you see? نه Did you saw?" },
+  "a2-1": { rule: "حال کامل تجربه یا نتیجه‌ای را به زمان حال پیوند می‌دهد؛ زمان دقیق و تمام‌شده معمولاً با گذشتهٔ ساده می‌آید.", form: "فاعل + have/has + قسمت سوم فعل (V3)", examples: ["I've visited London twice. — دو بار لندن رفته‌ام.", "She has lost her keys. — کلیدهایش را گم کرده است."], mistake: "برای yesterday معمولاً گذشتهٔ ساده بگو: I saw him yesterday، نه I have seen him yesterday." },
+  "a2-2": { rule: "صفت مقایسه‌ای برای مقایسهٔ دو چیز استفاده می‌شود. بسیاری از صفت‌های کوتاه er می‌گیرند و صفت‌های بلند با more می‌آیند.", form: "صفت کوتاه + -er + than · more + صفت بلند + than", examples: ["This bag is cheaper than that one. — این کیف ارزان‌تر از آن است.", "English is more interesting than I expected. — انگلیسی از چیزی که انتظار داشتم جالب‌تر است."], mistake: "good → better و bad → worse؛ این‌ها بی‌قاعده‌اند." },
+  "a2-3": { rule: "going to بیشتر برای قصد یا برنامهٔ از قبل شکل‌گرفته است؛ will برای تصمیم لحظه‌ای، قول و پیش‌بینی هم به‌کار می‌رود.", form: "فاعل + am/is/are going to + فعل پایه · فاعل + will + فعل پایه", examples: ["I'm going to study tonight. — قصد دارم امشب درس بخوانم.", "I'll help you. — کمکت می‌کنم."], mistake: "بعد از will، to نمی‌آید: will go، نه will to go." },
+  "a2-4": { rule: "افعال وجهی معنی توانایی، توصیه یا درخواست را اضافه می‌کنند و پس از آن‌ها فعل پایه می‌آید.", form: "can / should / could + فعل پایه", examples: ["I can swim. — می‌توانم شنا کنم.", "You should rest. — بهتر است استراحت کنی.", "Could you help me? — ممکن است کمکم کنی؟"], mistake: "پس از should یا can از to استفاده نکن: should go، نه should to go." },
+  "b1-1": { rule: "شرطی نوع اول دربارهٔ شرطی واقعی یا محتمل در آینده است.", form: "If + حال ساده، will + فعل پایه", examples: ["If it rains, we'll stay home. — اگر باران ببارد، خانه می‌مانیم.", "If you study, you'll improve. — اگر درس بخوانی، پیشرفت می‌کنی."], mistake: "در بخش if معمولاً will نمی‌آوریم: If she arrives، نه If she will arrive." },
+  "b1-2": { rule: "جمله‌وارهٔ موصولی اطلاعات بیشتری دربارهٔ یک اسم می‌دهد. who برای افراد، which برای چیزها و whose برای مالکیت است.", form: "اسم + who/which/that/whose + توضیح", examples: ["The woman who called is my aunt. — زنی که زنگ زد خاله‌ام است.", "The phone that I bought is new. — تلفنی که خریدم نو است."], mistake: "برای مالکیت از whose استفاده کن؛ who به‌تنهایی معنی «که مال اوست» نمی‌دهد." },
+  "b1-3": { rule: "گذشتهٔ کامل رویدادی را نشان می‌دهد که پیش از رویداد دیگری در گذشته رخ داده بود.", form: "فاعل + had + قسمت سوم فعل (V3)", examples: ["The film had started before we arrived. — فیلم پیش از رسیدن ما شروع شده بود."], mistake: "ترتیب رویدادها مهم است؛ برای هر اتفاق گذشته‌ای خودکار گذشتهٔ کامل به‌کار نبر." },
+  "b1-4": { rule: "در نقل‌قول غیرمستقیم، وقتی فعل گزارش در گذشته باشد، زمان فعل اغلب یک مرحله به گذشته می‌رود؛ ضمیرها هم با گوینده هماهنگ می‌شوند.", form: "She said, “I am tired.” → She said (that) she was tired.", examples: ["He said, “I have finished.” → He said he had finished."], mistake: "تغییر زمان همیشه اجباری نیست؛ اگر واقعیت هنوز برقرار باشد، بافت جمله مهم است." },
+  "b2-1": { rule: "شرطی نوع سوم برای تصور نتیجهٔ متفاوتی در گذشته است؛ معمولاً آن اتفاق دیگر قابل تغییر نیست.", form: "If + had + V3، would have + V3", examples: ["If I had left earlier, I would have caught the train. — اگر زودتر راه افتاده بودم، به قطار می‌رسیدم."], mistake: "بعد از would have باید قسمت سوم فعل بیاید: would have gone، نه would have went." },
+  "b2-2": { rule: "مجهول زمانی مناسب است که انجام‌دهنده نامعلوم، بدیهی یا کم‌اهمیت باشد و تمرکز روی عمل یا نتیجه باشد.", form: "شکل مناسب be + قسمت سوم فعل (V3)", examples: ["The report was written yesterday. — گزارش دیروز نوشته شد.", "The results will be announced tomorrow. — نتایج فردا اعلام خواهند شد."], mistake: "زمان در شکل be مشخص می‌شود؛ در مجهول آینده از will be + V3 استفاده کن." },
+  "b2-3": { rule: "در سبک رسمی، اگر عبارت منفی یا محدودکننده‌ای مثل Never یا Rarely ابتدای جمله بیاید، معمولاً فعل کمکی قبل از فاعل می‌آید.", form: "Never/Rarely + فعل کمکی + فاعل + فعل اصلی", examples: ["Never have I seen this. — هرگز این را ندیده‌ام.", "Rarely do we get such a chance. — به‌ندرت چنین فرصتی پیدا می‌کنیم."], mistake: "پس از وارونگی، ترتیب را دقیق نگه دار: Never have I seen، نه Never I have seen." },
+};
 function App() {
   const [saved, setSaved] = useState<SavedState>(loadSaved);
   const [page, setPage] = useState<Page>("home");
