@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import StageAssessment from "./StageAssessment";
 import ListeningPractice from "./ListeningPractice";
+import SpeakingPractice from "./SpeakingPractice";
 
 type Level = "A0" | "A1" | "A2" | "B1" | "B2" | "C1";
 type Page =
@@ -16,7 +17,8 @@ type Page =
   | "skills"
   | "settings"
   | "assessment"
-  | "listening";
+  | "listening"
+  | "speaking";
 
 type Question = {
   id: string;
@@ -848,6 +850,7 @@ function App() {
           <section className="workspace-content">
             {page === "assessment" && <StageAssessment onBack={() => go("dashboard")} />}
             {page === "listening" && <ListeningPractice onBack={() => go("skills")} />}
+            {page === "speaking" && <SpeakingPractice onBack={() => go("skills")} />}
             {page === "dashboard" && (
               <>
                 <div className="page-heading"><div><span className="eyebrow">فضای شخصی تو</span><h1>خوش برگشتی، {saved.userName}! 👋</h1><p>هر روز کمی تمرین، تو را جلوتر می‌برد.</p></div><button className="button button-primary" onClick={() => startLesson(saved.currentLessonId)}>ادامهٔ یادگیری ←</button></div>
@@ -987,7 +990,7 @@ function App() {
                   <article className="panel skill-card"><div className="skill-big-icon purple-icon">文</div><span className="skill-en">Reading</span><h3>خواندن</h3><p>متن‌های کوتاه درس‌ها را بخوان و معنی را از بافت حدس بزن.</p><button className="text-button" onClick={() => startLesson(saved.currentLessonId)}>شروع تمرین ←</button></article>
                   <article className="panel skill-card"><div className="skill-big-icon blue-icon">♫</div><span className="skill-en">Listening</span><h3>شنیدن</h3><p>به مکالمه‌های کوتاه گوش بده، سرعت را تنظیم کن و با سؤال‌های درک مطلب تمرین کن.</p><button className="text-button" onClick={() => go("listening")}>شروع تمرین ←</button></article>
                   <article className="panel skill-card"><div className="skill-big-icon green-icon">✎</div><span className="skill-en">Writing</span><h3>نوشتن</h3><p>جمله‌های انگلیسی بنویس و بررسی اولیهٔ ساختار را دریافت کن.</p><button className="text-button" onClick={() => go("practice")}>شروع تمرین ←</button></article>
-                  <article className="panel skill-card"><div className="skill-big-icon orange-icon">◉</div><span className="skill-en">Speaking</span><h3>گفتن و مکالمه</h3><p>برای ارزیابی واقعی گفتار، ضبط صدا و تحلیل تلفظ باید به برنامه اضافه شوند.</p><button className="text-button" onClick={() => setNotice("تمرین گفتاری هنوز ضبط صدا یا ارزیابی تلفظ ندارد.")}>جزئیات ←</button></article>
+                  <article className="panel skill-card"><div className="skill-big-icon orange-icon">◉</div><span className="skill-en">Speaking</span><h3>گفتن و مکالمه</h3><p>با میکروفون جمله‌ها را تکرار کن و بازخورد اولیه دربارهٔ شباهت گفتارت بگیر.</p><button className="text-button" onClick={() => go("speaking")}>شروع تمرین ←</button></article>
                 </div>
                 {notice && <p className="notice">{notice}</p>}
               </>
