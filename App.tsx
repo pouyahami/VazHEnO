@@ -780,7 +780,7 @@ function App() {
       setLessonChecked(false);
       setNotice("");
       setIsPageTurning(false);
-    }, 520);
+    }, 760);
   };
 
   const markReviewed = (word: string, confidence: "easy" | "hard") => {
