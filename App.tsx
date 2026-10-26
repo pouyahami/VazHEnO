@@ -551,8 +551,19 @@ const placementPool: Question[] = [
 
 lessons.push(...(expandedLessons as any));
 
-const reviewWords = lessons.flatMap((lesson) =>
-  lesson.words.map((word) => ({ ...word, lessonId: lesson.id, level: lesson.level })),
+// Keep malformed or partially authored lesson records from crashing the entire app.
+// A single missing record should never turn the page into a white screen.
+const validLessons = lessons.filter(
+  (item): item is Lesson =>
+    !!item &&
+    typeof item.id === "string" &&
+    typeof item.level === "string" &&
+    Array.isArray(item.words),
+);
+lessons.splice(0, lessons.length, ...validLessons);
+
+const reviewWords = lessons.flatMap((item) =>
+  item.words.map((word) => ({ ...word, lessonId: item.id, level: item.level })),
 );
 
 function shuffle<T>(items: T[]): T[] {
