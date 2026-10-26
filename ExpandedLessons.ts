@@ -1,4 +1,8 @@
-import type { Lesson } from "./lessonTypes";
+type Lesson = {
+  id: string; level: "A0" | "A1" | "A2" | "B1" | "B2" | "C1"; title: string; category: string; minutes: number;
+  explanation: string; example: string; translation: string; tip: string; question: string; options: string[]; answer: string; feedback: string;
+  words: { word: string; meaning: string; example: string }[];
+};
 
 function lesson(
   id: string, level: Lesson["level"], title: string, category: string, minutes: number,
