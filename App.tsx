@@ -524,7 +524,34 @@ const placementPool: Question[] = [
   { id: "p-c1-2", level: "C1", question: "Choose the most cautious academic claim.", options: ["This proves the theory.", "This may lend support to the theory.", "This unquestionably settles the matter.", "This always confirms everything."], answer: "This may lend support to the theory.", explanation: "May lend support بیان محتاطانه و آکادمیک است." },
   { id: "p-c1-3", level: "C1", question: "Not until the data were reviewed ___ the error.", options: ["we noticed", "did we notice", "we did noticed", "noticed we"], answer: "did we notice", explanation: "پس از Not until در ابتدای جمله وارونگی رخ می‌دهد." },
   { id: "p-c1-4", level: "C1", question: "The results are ___ consistent with the initial hypothesis.", options: ["broadly", "deeply", "utterly", "heavily"], answer: "broadly", explanation: "Broadly consistent ترکیب طبیعی و رایجی است." },
+
+  { id: "p-a0-5", level: "A0", question: "Choose the correct sentence.", options: ["They is at home.", "They are at home.", "They am at home.", "They be at home."], answer: "They are at home.", explanation: "They با are می‌آید." },
+  { id: "p-a0-6", level: "A0", question: "Choose the correct reply: 'How are you?'", options: ["I'm fine, thanks.", "I fine is.", "I have fine.", "I are good."], answer: "I'm fine, thanks.", explanation: "پاسخ رایج به How are you? عبارت I'm fine, thanks است." },
+  { id: "p-a1-5", level: "A1", question: "My sister doesn't ___ coffee.", options: ["likes", "like", "liking", "liked"], answer: "like", explanation: "پس از doesn't فعل اصلی به شکل پایه می‌آید." },
+  { id: "p-a1-6", level: "A1", question: "There are ___ apples on the table.", options: ["a little", "much", "a few", "any of"], answer: "a few", explanation: "Apples قابل‌شمارش و جمع است؛ a few برای تعداد کم به‌کار می‌رود." },
+  { id: "p-a2-5", level: "A2", question: "I have known him ___ five years.", options: ["since", "for", "from", "during"], answer: "for", explanation: "For مدت زمان را نشان می‌دهد؛ five years یک مدت است." },
+  { id: "p-a2-6", level: "A2", question: "You look tired. You ___ take a break.", options: ["should", "should to", "are", "would to"], answer: "should", explanation: "برای توصیه از should + شکل پایهٔ فعل استفاده می‌کنیم." },
+  { id: "p-b1-5", level: "B1", question: "I wish I ___ more free time.", options: ["have", "will have", "had", "am having"], answer: "had", explanation: "برای آرزوی خلاف واقع در زمان حال، پس از I wish از گذشتهٔ ساده استفاده می‌شود." },
+  { id: "p-b1-6", level: "B1", question: "Despite ___ late, he joined the meeting.", options: ["be", "being", "was", "to be"], answer: "being", explanation: "پس از despite اسم یا شکل ing فعل می‌آید." },
+  { id: "p-b2-5", level: "B2", question: "No sooner ___ than the lights went out.", options: ["we arrived", "had we arrived", "we had arrive", "did we arrived"], answer: "had we arrived", explanation: "با No sooner در ابتدای جمله، وارونگی و معمولاً past perfect به‌کار می‌رود." },
+  { id: "p-b2-6", level: "B2", question: "The manager insisted that the report ___ revised.", options: ["is", "was", "be", "being"], answer: "be", explanation: "در ساختار رسمی insist that، شکل پایهٔ فعل در جملهٔ وابسته می‌آید." },
+  { id: "p-c1-5", level: "C1", question: "Choose the most natural collocation.", options: ["draw a conclusion", "pull a conclusion", "make a conclusion", "take a conclusion"], answer: "draw a conclusion", explanation: "Draw a conclusion هم‌نشینی طبیعی و رایج است." },
+  { id: "p-c1-6", level: "C1", question: "The findings, ___ preliminary, are promising.", options: ["albeit", "despite of", "whereas of", "unless"], answer: "albeit", explanation: "Albeit به معنی «هرچند» است و در این جمله به‌صورت پیونددهندهٔ فشرده به‌کار می‌رود." },
 ];
+
+
+  { id: "p-a0-5", level: "A0", question: "Choose the correct sentence.", options: ["They is at home.", "They are at home.", "They am at home.", "They be at home."], answer: "They are at home.", explanation: "They با are می‌آید." },
+  { id: "p-a0-6", level: "A0", question: "Choose the correct reply: 'How are you?'", options: ["I'm fine, thanks.", "I fine is.", "I have fine.", "I are good."], answer: "I'm fine, thanks.", explanation: "پاسخ رایج به How are you? عبارت I'm fine, thanks است." },
+  { id: "p-a1-5", level: "A1", question: "My sister doesn't ___ coffee.", options: ["likes", "like", "liking", "liked"], answer: "like", explanation: "پس از doesn't فعل اصلی به شکل پایه می‌آید." },
+  { id: "p-a1-6", level: "A1", question: "There are ___ apples on the table.", options: ["a little", "much", "a few", "any of"], answer: "a few", explanation: "Apples قابل‌شمارش و جمع است؛ a few برای تعداد کم به‌کار می‌رود." },
+  { id: "p-a2-5", level: "A2", question: "I have known him ___ five years.", options: ["since", "for", "from", "during"], answer: "for", explanation: "For مدت زمان را نشان می‌دهد؛ five years یک مدت است." },
+  { id: "p-a2-6", level: "A2", question: "You look tired. You ___ take a break.", options: ["should", "should to", "are", "would to"], answer: "should", explanation: "برای توصیه از should + شکل پایهٔ فعل استفاده می‌کنیم." },
+  { id: "p-b1-5", level: "B1", question: "I wish I ___ more free time.", options: ["have", "will have", "had", "am having"], answer: "had", explanation: "برای آرزوی خلاف واقع در زمان حال، پس از I wish از گذشتهٔ ساده استفاده می‌شود." },
+  { id: "p-b1-6", level: "B1", question: "Despite ___ late, he joined the meeting.", options: ["be", "being", "was", "to be"], answer: "being", explanation: "پس از despite اسم یا شکل ing فعل می‌آید." },
+  { id: "p-b2-5", level: "B2", question: "No sooner ___ than the lights went out.", options: ["we arrived", "had we arrived", "we had arrive", "did we arrived"], answer: "had we arrived", explanation: "با No sooner در ابتدای جمله، وارونگی و معمولاً past perfect به‌کار می‌رود." },
+  { id: "p-b2-6", level: "B2", question: "The manager insisted that the report ___ revised.", options: ["is", "was", "be", "being"], answer: "be", explanation: "در ساختار رسمی insist that، شکل پایهٔ فعل در جملهٔ وابسته می‌آید." },
+  { id: "p-c1-5", level: "C1", question: "Choose the most natural collocation.", options: ["draw a conclusion", "pull a conclusion", "make a conclusion", "take a conclusion"], answer: "draw a conclusion", explanation: "Draw a conclusion هم‌نشینی طبیعی و رایج است." },
+  { id: "p-c1-6", level: "C1", question: "The findings, ___ preliminary, are promising.", options: ["albeit", "despite of", "whereas of", "unless"], answer: "albeit", explanation: "Albeit به معنی «هرچند» است و در این جمله به‌صورت پیونددهندهٔ فشرده به‌کار می‌رود." },
 
 const reviewWords = lessons.flatMap((lesson) =>
   lesson.words.map((word) => ({ ...word, lessonId: lesson.id, level: lesson.level })),
@@ -819,7 +846,7 @@ function App() {
               <article className="feature-card"><div className="feature-icon orange-icon">◈</div><h3>پیشرفت واقعی</h3><p>تکمیل درس‌ها و نتیجهٔ تمرین‌ها ثبت می‌شوند.</p><span className="feature-index">04</span></article>
             </div>
           </section>
-          <section className="cta-section section-container"><div><span className="eyebrow">شروع مسیر تو</span><h2>قدم اول را همین امروز بردار.</h2><p>سؤال‌هایی از همهٔ سطح‌ها پاسخ بده تا نقطهٔ شروع مناسب‌تری پیدا کنی.</p></div><button className="button button-light button-large" onClick={startQuiz}>شروع تعیین سطح <span>←</span></button></section>
+          <section className="cta-section section-container"><div><span className="eyebrow">شروع مسیر تو</span><h2>قدم اول را همین امروز بردار.</h2><p>به ۳۶ سؤال از آسان به سخت پاسخ بده؛ نتیجه نقطهٔ شروع مناسب‌تری پیشنهاد می‌کند.</p></div><button className="button button-light button-large" onClick={startQuiz}>شروع تعیین سطح <span>←</span></button></section>
         </main>
       )}
 
@@ -882,7 +909,7 @@ function App() {
                     </div>
                     {notice && <p className="notice">{notice}</p>}
                     <button className="button button-primary button-large full-button" onClick={submitPlacement}>{placementIndex === placementQuestions.length - 1 ? "مشاهدهٔ نتیجه" : "سؤال بعدی"} ←</button>
-                    <p className="quiz-footnote">این آزمون تشخیصی اولیه است. برای سنجش کامل CEFR، مهارت شنیدن، گفتار و نوشتار نیز باید ارزیابی شوند.</p>
+                    <p className="quiz-footnote">آزمون شامل ۳۶ سؤال در شش سطح A0 تا C1 است و از آسان به سخت پیش می‌رود. آزمون‌های بین‌المللی تعداد ثابتی ندارند؛ این آزمون از چارچوب CEFR الهام گرفته و رسمی نیست. شنیدن، گفتار و نوشتار نیز برای ارزیابی کامل باید جداگانه سنجیده شوند.</p>
                   </div>
                 ) : (
                   <div className="quiz-card panel quiz-result">
@@ -917,7 +944,7 @@ function App() {
                     </div>
                   </div>;
                 })}
-                <div className="info-note">این نسخه یک دورهٔ آموزشی اولیهٔ ۲۴ درسی دارد. برای تبدیل آن به دورهٔ کامل و معتبر CEFR، باید محتوای همهٔ مهارت‌ها، فایل‌های صوتی، تکالیف نوشتاری و آزمون‌های استاندارد نیز تکمیل و بازبینی شوند.</div>
+                <div className="info-note">این نسخه یک دورهٔ آموزشی اولیهٔ ۲۴ درسی دارد؛ درس‌های گرامری با ساختار، مثال‌های بیشتر و اشتباهات رایج تکمیل شده‌اند. برای تبدیل آن به دورهٔ کامل و معتبر CEFR، باید محتوای همهٔ مهارت‌ها، فایل‌های صوتی، تکالیف نوشتاری و آزمون‌های استاندارد نیز تکمیل و بازبینی شوند.</div>
               </>
             )}
 
@@ -929,6 +956,15 @@ function App() {
                   <div className="lesson-step-label">مفهوم اصلی</div>
                   <h2>{currentLesson.title}</h2>
                   <p className="lesson-explanation">{currentLesson.explanation}</p>
+                  {GRAMMAR_GUIDES[currentLesson.id] && (
+                    <section className="grammar-guide" aria-label="توضیح کامل گرامر">
+                      <h3>گرامر را قدم‌به‌قدم بفهم</h3>
+                      <p>{GRAMMAR_GUIDES[currentLesson.id].rule}</p>
+                      <div className="grammar-formula"><strong>ساختار جمله</strong><span dir="ltr">{GRAMMAR_GUIDES[currentLesson.id].form}</span></div>
+                      <div className="grammar-examples"><strong>مثال‌های بیشتر</strong>{GRAMMAR_GUIDES[currentLesson.id].examples.map((example) => <p key={example} dir="auto">{example}</p>)}</div>
+                      <div className="grammar-mistake"><strong>اشتباه رایج</strong><p>{GRAMMAR_GUIDES[currentLesson.id].mistake}</p></div>
+                    </section>
+                  )}
                   <div className="example-box"><span>مثال انگلیسی</span><strong dir="ltr">{currentLesson.example}</strong><p>{currentLesson.translation}</p></div>
                   <div className="tip-box"><span>✦ نکتهٔ مهم</span><p>{currentLesson.tip}</p></div>
                   <div className="lesson-question"><h3>{currentLesson.question}</h3>
