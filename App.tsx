@@ -602,6 +602,9 @@ const GRAMMAR_GUIDES: Record<string, { rule: string; form: string; examples: str
 };
 function App() {
   const [saved, setSaved] = useState<SavedState>(loadSaved);
+  const activeLevel = saved.placementResult ?? saved.level;
+  const isEnglishSite = LEVELS.indexOf(activeLevel) >= LEVELS.indexOf("A1");
+  const uiText = (fa: string, en: string) => isEnglishSite ? en : fa;
   const [page, setPage] = useState<Page>("home");
   const [mobileMenu, setMobileMenu] = useState(false);
   const [notice, setNotice] = useState("");
@@ -833,23 +836,23 @@ function App() {
   };
 
   return (
-    <div className="app-shell" dir="rtl">
+    <div className={`app-shell ${isEnglishSite ? "english-site" : ""}`} dir={isEnglishSite ? "ltr" : "rtl"} lang={isEnglishSite ? "en" : "fa"}>
       <header className="topbar">
         <div className="topbar-inner">
-          <button className="brand" onClick={() => go("home")} aria-label="صفحه اصلی واژه‌نو">
+          <button className="brand" onClick={() => go("home")} aria-label={uiText("صفحه اصلی واژه‌نو", "Vazheno home")}>
             <span className="brand-mark">و</span>
             <span className="brand-name">واژه‌نو</span>
           </button>
-          <button className="mobile-menu-button" onClick={() => setMobileMenu(!mobileMenu)} aria-label="باز کردن منو">☰</button>
+          <button className="mobile-menu-button" onClick={() => setMobileMenu(!mobileMenu)} aria-label={uiText("باز کردن منو", "Open menu")}>☰</button>
           <nav className={`top-links ${mobileMenu ? "is-open" : ""}`}>
-            <button onClick={() => go("home")}>صفحهٔ اصلی</button>
-            <button onClick={() => go("path")}>مسیر یادگیری</button>
-            <button onClick={() => go("skills")}>مهارت‌ها</button>
-            <button onClick={() => go("assessment")}>ارزیابی مرحله‌ای</button>
+            <button onClick={() => go("home")}>{uiText("صفحهٔ اصلی", "Home")}</button>
+            <button onClick={() => go("path")}>{uiText("مسیر یادگیری", "Learning path")}</button>
+            <button onClick={() => go("skills")}>{uiText("مهارت‌ها", "Skills")}</button>
+            <button onClick={() => go("assessment")}>{uiText("ارزیابی مرحله‌ای", "Stage assessment")}</button>
           </nav>
           <div className="top-actions">
-            <button className="button button-ghost small-button" onClick={() => go("dashboard")}>فضای یادگیری</button>
-            <button className="button button-primary small-button" onClick={startQuiz}>تعیین سطح</button>
+            <button className="button button-ghost small-button" onClick={() => go("dashboard")}>{uiText("فضای یادگیری", "Dashboard")}</button>
+            <button className="button button-primary small-button" onClick={startQuiz}>{uiText("تعیین سطح", "Placement test")}</button>
           </div>
         </div>
       </header>
@@ -858,14 +861,14 @@ function App() {
         <main>
           <section className="hero section-container">
             <div className="hero-copy">
-              <span className="eyebrow"><span className="eyebrow-dot" /> یادگیری اصولی، قدم‌به‌قدم</span>
-              <h1>انگلیسی را<br /><span className="gradient-text">واقعاً یاد بگیر.</span></h1>
-              <p className="hero-description">از اولین جمله‌ها تا درک متن‌های پیشرفته؛ با آموزش فارسی، تمرین فعال و مسیر متناسب با سطح خودت.</p>
+              <span className="eyebrow"><span className="eyebrow-dot" /> {uiText("یادگیری اصولی، قدم‌به‌قدم", "Learn effectively, step by step")}</span>
+              <h1>{isEnglishSite ? <>Learn English<br /><span className="gradient-text">for real.</span></> : <>انگلیسی را<br /><span className="gradient-text">واقعاً یاد بگیر.</span></>}</h1>
+              <p className="hero-description">{uiText("از اولین جمله‌ها تا درک متن‌های پیشرفته؛ با آموزش فارسی، تمرین فعال و مسیر متناسب با سطح خودت.", "From your first sentences to advanced reading, with active practice and a learning path tailored to your level.")}</p>
               <div className="hero-actions">
-                <button className="button button-primary button-large" onClick={startQuiz}>شروع تعیین سطح <span>←</span></button>
-                <button className="button button-ghost button-large" onClick={() => go("path")}>دیدن دوره‌ها</button>
+                <button className="button button-primary button-large" onClick={startQuiz}>{uiText("شروع تعیین سطح", "Take the placement test")} <span>{isEnglishSite ? "→" : "←"}</span></button>
+                <button className="button button-ghost button-large" onClick={() => go("path")}>{uiText("دیدن دوره‌ها", "Explore courses")}</button>
               </div>
-              <div className="hero-trust"><span className="trust-icon">✓</span> شش سطح از A0 تا C1 <span className="trust-separator">·</span> توضیح فارسی <span className="trust-separator">·</span> ذخیرهٔ پیشرفت</div>
+              <div className="hero-trust"><span className="trust-icon">✓</span>{uiText("شش سطح از A0 تا C1", "Six levels from A0 to C1")} <span className="trust-separator">·</span> {uiText("توضیح فارسی", "Personalized practice")} <span className="trust-separator">·</span> {uiText("ذخیرهٔ پیشرفت", "Progress tracking")}</div>
             </div>
             <div className="hero-visual">
               <div className="glow-orb glow-one" />
@@ -1020,10 +1023,10 @@ function App() {
 
             {page === "lesson" && (
               <div className={`lesson-page lesson-slide ${isPageTurning ? `page-turning turn-${turnDirection === 1 ? "next" : "previous"}` : ""}`} onTouchStart={(event) => { if (!isPageTurning) setTouchStartX(event.touches[0]?.clientX ?? null); }} onTouchEnd={(event) => { if (touchStartX === null || isPageTurning) return; const delta = event.changedTouches[0]?.clientX - touchStartX; if (Math.abs(delta) > 65) moveLesson(delta > 0 ? 1 : -1); setTouchStartX(null); }}>
-                <div className="page-heading"><div><span className="eyebrow">درس تعاملی · {currentLesson.level}</span><h1>{currentLesson.title}</h1><p>{currentLesson.category} · حدود {currentLesson.minutes} دقیقه</p></div><span className="level-pill">درس {lessonIndex + 1} از {lessons.length}</span></div>
-                <div className="lesson-progress"><span style={{ width: `${((lessonIndex + 1) / lessons.length) * 100}%` }} /></div><p className="swipe-hint">از چپ به راست بکش تا صفحهٔ بعدی ورق بخورد ← · از راست به چپ بکش تا برگردی →</p>{isPageTurning && <div className="page-turn-status" role="status" aria-live="polite"><span className="page-turn-icon" aria-hidden="true">▤</span><span>در حال ورق زدن صفحه...</span><span className="page-turn-dots" aria-hidden="true">•••</span></div>}
+                <div className="page-heading"><div><span className="eyebrow">{uiText("درس تعاملی", "Interactive lesson")} · {currentLesson.level}</span><h1>{currentLesson.title}</h1><p>{currentLesson.category} · حدود {currentLesson.minutes} دقیقه</p></div><span className="level-pill">{uiText("درس", "Lesson")} {lessonIndex + 1} {uiText("از", "of")} {lessons.length}</span></div>
+                <div className="lesson-progress"><span style={{ width: `${((lessonIndex + 1) / lessons.length) * 100}%` }} /></div><p className="swipe-hint">{uiText("از چپ به راست بکش تا صفحهٔ بعدی ورق بخورد ← · از راست به چپ بکش تا برگردی →", "Swipe left to right for the next page · Swipe right to left to go back")}</p>{isPageTurning && <div className="page-turn-status" role="status" aria-live="polite"><span className="page-turn-icon" aria-hidden="true">▤</span><span>{uiText("در حال ورق زدن صفحه...", "Turning page...")}</span><span className="page-turn-dots" aria-hidden="true">•••</span></div>}
                 <article className="panel lesson-main-card">
-                  <div className="lesson-step-label">مفهوم اصلی</div>
+                  <div className="lesson-step-label">{uiText("مفهوم اصلی", "Key concept")}</div>
                   <h2>{currentLesson.title}</h2>
                   <p className="lesson-explanation">{currentLesson.explanation}</p>
                   {GRAMMAR_GUIDES[currentLesson.id] && (
@@ -1035,14 +1038,14 @@ function App() {
                       <div className="grammar-mistake"><strong>اشتباه رایج</strong><p>{GRAMMAR_GUIDES[currentLesson.id].mistake}</p></div>
                     </section>
                   )}
-                  <div className="example-box"><span>مثال انگلیسی</span><strong dir="ltr">{currentLesson.example}</strong><p>{currentLesson.translation}</p></div>
-                  <div className="tip-box"><span>✦ نکتهٔ مهم</span><p>{currentLesson.tip}</p></div>
+                  <div className="example-box"><span>{uiText("مثال انگلیسی", "English example")}</span><strong dir="ltr">{currentLesson.example}</strong><p>{currentLesson.translation}</p></div>
+                  <div className="tip-box"><span>{uiText("✦ نکتهٔ مهم", "✦ Key tip")}</span><p>{currentLesson.tip}</p></div>
                   <div className="lesson-question"><h3>{currentLesson.question}</h3>
                     <div className="inline-options">{currentLesson.options.map((option) => <button key={option} className={`quiz-option ${lessonChoice === option ? "selected" : ""}`} onClick={() => { setLessonChoice(option); setLessonChecked(false); setNotice(""); }}>{option}</button>)}</div>
-                    <button className="button button-primary" onClick={checkLesson}>بررسی پاسخ</button>
+                    <button className="button button-primary" onClick={checkLesson}>{uiText("بررسی پاسخ", "Check answer")}</button>
                     {lessonChecked && <div className={`feedback-box ${lessonChoice === currentLesson.answer ? "success" : ""}`}>{lessonChoice === currentLesson.answer ? "آفرین! پاسخ درست است. " : "پاسخ درست: " + currentLesson.answer + ". "}{currentLesson.feedback}</div>}
                   </div>
-                  <div className="panel"><h3>واژگان این درس</h3>{currentLesson.words.map((word) => <div className="review-card" key={word.word}><strong dir="ltr">{word.word}</strong><span>{word.meaning}</span><p dir="ltr">{word.example}</p><button className="button button-ghost" onClick={() => markReviewed(word.word, "hard")}>افزودن به مرور</button></div>)}</div>
+                  <div className="panel"><h3>{uiText("واژگان این درس", "Lesson vocabulary")}</h3>{currentLesson.words.map((word) => <div className="review-card" key={word.word}><strong dir="ltr">{word.word}</strong><span>{word.meaning}</span><p dir="ltr">{word.example}</p><button className="button button-ghost" onClick={() => markReviewed(word.word, "hard")}>افزودن به مرور</button></div>)}</div>
                   <section className="panel integrated-practice"><div className="panel-heading"><div><span className="eyebrow">تمرین یکپارچه</span><h3>همین درس را با چهار مهارت یاد بگیر</h3><p>گرامر و واژگان را بلافاصله در شنیدن، گفتن و نوشتن به کار ببر.</p></div></div>
                     <div className="integrated-skill-actions">
                       <div className="integrated-skill"><span className="skill-big-icon blue-icon">♫</span><div><strong>شنیدن · Listening</strong><p>مثال همین درس را با تلفظ انگلیسی گوش بده.</p><button className="button button-ghost" onClick={speakLessonExample}>پخش مثال انگلیسی 🔊</button></div></div>
@@ -1052,9 +1055,9 @@ function App() {
                   </section>
                   {notice && <p className="notice">{notice}</p>}
                   <div className="lesson-controls">
-                    <button className="button button-ghost" disabled={lessonIndex === 0} onClick={() => moveLesson(-1)}>→ درس قبل</button>
-                    <button className="button button-ghost" onClick={completeLesson}>ثبت تکمیل درس ✓</button>
-                    <button className="button button-primary" onClick={() => moveLesson(1)} disabled={lessonIndex === lessons.length - 1}>{lessonIndex === lessons.length - 1 ? "آخرین درس" : "درس بعد ←"}</button>
+                    <button className="button button-ghost" disabled={lessonIndex === 0} onClick={() => moveLesson(-1)}>{uiText("→ درس قبل", "← Previous lesson")}</button>
+                    <button className="button button-ghost" onClick={completeLesson}>{uiText("ثبت تکمیل درس ✓", "Mark lesson complete ✓")}</button>
+                    <button className="button button-primary" onClick={() => moveLesson(1)} disabled={lessonIndex === lessons.length - 1}>{lessonIndex === lessons.length - 1 ? "آخرین درس"  : uiText("درس بعد ←", "Next lesson →")}</button>
                   </div>
                 </article>
               </div>

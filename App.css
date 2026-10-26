@@ -2166,3 +2166,18 @@ button:not(:disabled) {
 @keyframes turn-dots { 0%,100% { opacity:.25; } 50% { opacity:1; } }
 @keyframes turn-status-in { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
 @media (prefers-reduced-motion:reduce) { .lesson-slide.page-turning .lesson-main-card, .page-turn-icon, .page-turn-dots { animation-duration:1ms !important; } }
+
+
+/* Automatic English interface for learners placed at A1 or above */
+.english-site { direction:ltr; }
+.english-site .topbar-inner, .english-site .top-links, .english-site .top-actions { direction:ltr; }
+.english-site .hero-copy, .english-site .page-heading, .english-site .panel, .english-site .lesson-main-card { text-align:left; }
+.english-site .hero-trust { direction:ltr; }
+.english-site .lesson-controls { direction:ltr; }
+.english-site .swipe-hint { direction:ltr; }
+.english-site .lesson-step-label { text-align:left; }
+.english-site .field-label { display:block; text-align:left; }
+.english-site .quiz-footnote { text-align:left; }
+.english-site .grammar-examples, .english-site .grammar-mistake { text-align:left; }
+.english-site .review-card { direction:ltr; }
+.english-site .review-meaning p { text-align:left; }
