@@ -2209,3 +2209,74 @@ button:not(:disabled) {
 .english-site .grammar-examples, .english-site .grammar-mistake { text-align:left; }
 .english-site .review-card { direction:ltr; }
 .english-site .review-meaning p { text-align:left; }
+
+
+/* Direction-aware book flip: Persian reads right-to-left, English left-to-right. */
+.lesson-slide.rtl-book.page-turning.turn-next::before {
+  transform-origin: right center;
+  background:
+    linear-gradient(270deg, #fffef9 0%, #fcf8ee 43%, #f3ead9 76%, #d7c8b0 93%, #766b5d 100%);
+  box-shadow:
+    inset 2px 0 2px #4a3d2c30,
+    inset 22px 0 28px #6c5a4314,
+    -18px 4px 32px #1d143b30;
+  animation-name: rtl-paper-next;
+}
+.lesson-slide.rtl-book.page-turning.turn-previous::before {
+  transform-origin: left center;
+  background:
+    linear-gradient(90deg, #fffef9 0%, #fcf8ee 43%, #f3ead9 76%, #d7c8b0 93%, #766b5d 100%);
+  box-shadow:
+    inset -2px 0 2px #4a3d2c30,
+    inset -22px 0 28px #6c5a4314,
+    18px 4px 32px #1d143b30;
+  animation-name: rtl-paper-previous;
+}
+.lesson-slide.rtl-book.page-turning.turn-next::after {
+  background: linear-gradient(270deg, #16102700 0%, #16102700 38%, #1610270a 56%, #16102730 88%, #16102700 100%);
+  animation-name: rtl-shadow-next;
+}
+.lesson-slide.rtl-book.page-turning.turn-previous::after {
+  background: linear-gradient(90deg, #16102700 0%, #16102700 38%, #1610270a 56%, #16102730 88%, #16102700 100%);
+  animation-name: rtl-shadow-previous;
+}
+.lesson-slide.rtl-book.page-turning::before {
+  border-radius: 3px 0 0 3px;
+}
+.lesson-slide.ltr-book.page-turning::before {
+  border-radius: 0 3px 3px 0;
+}
+@keyframes rtl-paper-next {
+  0% { opacity:0; transform:rotateY(0deg) translateZ(1px) scaleX(.995); filter:brightness(1); }
+  7% { opacity:1; }
+  20% { transform:rotateY(18deg) translateZ(3px) scaleX(.99); filter:brightness(.98); }
+  42% { opacity:1; transform:rotateY(62deg) translateZ(8px) scaleX(.97); filter:brightness(.94); }
+  58% { opacity:1; transform:rotateY(104deg) translateZ(10px) scaleX(.96); filter:brightness(.9); }
+  78% { opacity:1; transform:rotateY(151deg) translateZ(5px) scaleX(.985); filter:brightness(.97); }
+  100% { opacity:0; transform:rotateY(180deg) translateZ(0) scaleX(1); filter:brightness(1); }
+}
+@keyframes rtl-paper-previous {
+  0% { opacity:0; transform:rotateY(0deg) translateZ(1px) scaleX(.995); filter:brightness(1); }
+  7% { opacity:1; }
+  20% { transform:rotateY(-18deg) translateZ(3px) scaleX(.99); filter:brightness(.98); }
+  42% { opacity:1; transform:rotateY(-62deg) translateZ(8px) scaleX(.97); filter:brightness(.94); }
+  58% { opacity:1; transform:rotateY(-104deg) translateZ(10px) scaleX(.96); filter:brightness(.9); }
+  78% { opacity:1; transform:rotateY(-151deg) translateZ(5px) scaleX(.985); filter:brightness(.97); }
+  100% { opacity:0; transform:rotateY(-180deg) translateZ(0) scaleX(1); filter:brightness(1); }
+}
+@keyframes rtl-shadow-next {
+  0%,100% { opacity:0; }
+  18% { opacity:.1; }
+  48%,62% { opacity:.9; }
+  84% { opacity:.35; }
+}
+@keyframes rtl-shadow-previous {
+  0%,100% { opacity:0; }
+  18% { opacity:.1; }
+  48%,62% { opacity:.9; }
+  84% { opacity:.35; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .lesson-slide.rtl-book.page-turning::before,
+  .lesson-slide.rtl-book.page-turning::after { animation-duration:1ms !important; }
+}
