@@ -5,6 +5,7 @@ import StageAssessment from "./StageAssessment";
 import ListeningPractice from "./ListeningPractice";
 import SpeakingPractice from "./SpeakingPractice";
 import ImmersivePractice from "./ImmersivePractice";
+import DailyLearning from "./DailyLearning";
 import { expandedLessons } from "./ExpandedLessons";
 
 type Level = "A0" | "A1" | "A2" | "B1" | "B2" | "C1";
@@ -106,7 +107,7 @@ function loadSaved(): SavedState {
   }
 }
 
-const lessons: Lesson[] = [
+const baseLessons: Lesson[] = [
   {
     id: "a0-1", level: "A0", title: "سلام و معرفی خود", category: "مکالمه",
     minutes: 8,
@@ -503,6 +504,8 @@ const lessons: Lesson[] = [
     ],
   },
 ];
+
+const lessons: Lesson[] = [...baseLessons, ...expandedLessons];
 
 const placementPool: Question[] = [
   { id: "p-a0-1", level: "A0", question: "Choose the correct sentence.", options: ["I is happy.", "I am happy.", "I are happy.", "I be happy."], answer: "I am happy.", explanation: "I با am می‌آید." },
@@ -1004,6 +1007,7 @@ function App() {
               <>
                 <div className="page-heading"><div><span className="eyebrow">نقشهٔ راه تو</span><h1>مسیر یادگیری</h1><p>درس‌ها را به ترتیب یا از سطح مورد نیازت انتخاب کن.</p></div><span className="level-pill">سطح: {saved.placementResult ?? saved.level}</span></div>
                 <div className="path-overview panel"><div><span>پیشرفت دوره</span><strong>{progress}٪</strong></div><div className="mini-progress"><span style={{ width: `${progress}%` }} /></div><p>{completedCount} درس از {lessons.length} درس تکمیل شده است.</p></div>
+                <DailyLearning lessons={lessons} level={saved.placementResult ?? saved.level} completedLessonIds={saved.completedLessons} onOpenLesson={startLesson} />
                 {LEVELS.map((level) => {
                   const group = lessons.filter((lesson) => lesson.level === level);
                   return <div key={level} className="path-level-group">
