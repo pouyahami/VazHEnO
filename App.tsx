@@ -59,6 +59,7 @@ type SavedState = {
   placementResult: Level | null;
   lastStudyDate: string;
   studiedToday: number;
+  skillProgress: Record<string, number>;
 };
 
 const STORAGE_KEY = "vazheno-progress-v3";
@@ -76,6 +77,7 @@ const emptyState: SavedState = {
   placementResult: null,
   lastStudyDate: "",
   studiedToday: 0,
+  skillProgress: { reading: 0, listening: 0, speaking: 0, writing: 0 },
 };
 
 function loadSaved(): SavedState {
@@ -663,6 +665,19 @@ function App() {
     go("lesson");
   };
 
+  const recordSkill = (skill: "reading" | "listening" | "speaking" | "writing") => {
+    setSaved((current) => ({ ...current, skillProgress: { ...emptyState.skillProgress, ...(current.skillProgress ?? {}), [skill]: ((current.skillProgress ?? {})[skill] ?? 0) + 1 } }));
+  };
+
+  const speakLessonExample = () => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(currentLesson.example);
+      utterance.lang = "en-US"; utterance.rate = 0.82; window.speechSynthesis.speak(utterance);
+      recordSkill("listening"); setNotice("نمونهٔ انگلیسی پخش شد؛ یک بار دیگر گوش بده و سپس خودت تکرار کن.");
+    } else setNotice("مرورگر شما پخش گفتار را پشتیبانی نمی‌کند.");
+  };
+
   const completeLesson = () => {
     const today = new Date().toISOString().slice(0, 10);
     setSaved((current) => ({
@@ -721,6 +736,7 @@ function App() {
   const checkLesson = () => {
     setLessonChecked(true);
     if (lessonChoice === currentLesson.answer) {
+      recordSkill("reading");
       setNotice("آفرین! پاسخ درست است. " + currentLesson.feedback);
     } else {
       setNotice("هنوز درست نیست. " + currentLesson.feedback);
@@ -897,6 +913,7 @@ function App() {
                   <div className="metric-card"><span className="metric-icon orange-icon">↻</span><span>برای مرور</span><strong>{reviewQueue.length} <small>واژه</small></strong></div>
                   <div className="metric-card"><span className="metric-icon blue-icon">◷</span><span>هدف روزانه</span><strong>{saved.dailyGoal}</strong></div>
                 </div>
+                <div className="panel profile-skills"><div className="panel-heading"><div><h3>پروفایل مهارتی تو</h3><p>پیشرفت هر مهارت جداگانه ثبت می‌شود؛ با تمرین‌های داخل درس، نوارها به‌روز می‌شوند.</p></div><span className="level-pill">۴ مهارت</span></div><div className="profile-skill-grid">{([{key:"reading",en:"Reading",fa:"خواندن",icon:"文"},{key:"listening",en:"Listening",fa:"شنیدن",icon:"♫"},{key:"speaking",en:"Speaking",fa:"گفتار",icon:"◉"},{key:"writing",en:"Writing",fa:"نوشتن",icon:"✎"}] as const).map((skill) => { const score = Math.min(100, (saved.skillProgress?.[skill.key] ?? 0) * 5); return <div className="profile-skill" key={skill.key}><div className="profile-skill-top"><span className="profile-skill-icon">{skill.icon}</span><div><strong>{skill.fa}</strong><small>{skill.en}</small></div><b>{score}٪</b></div><div className="mini-progress"><span style={{width: score + "%"}} /></div><small>{saved.skillProgress?.[skill.key] ?? 0} تمرین ثبت‌شده</small></div>; })}</div></div>
                 <div className="content-grid">
                   <div className="panel"><div className="panel-heading"><div><h3>درس بعدی</h3><p>بر اساس مسیر دوره</p></div><button className="text-button" onClick={() => go("path")}>همهٔ درس‌ها ←</button></div><div className="next-lesson"><div className="next-lesson-icon">Aa</div><div className="next-lesson-info"><span className="lesson-tag">{currentLesson.level} · {currentLesson.category}</span><h4>{currentLesson.title}</h4><p>{currentLesson.minutes} دقیقه · همراه با تمرین</p></div><button className="round-arrow" onClick={() => startLesson(currentLesson.id)}>←</button></div></div>
                   <div className="panel"><div className="panel-heading"><div><h3>سطح‌های دوره</h3><p>مسیر آموزشی</p></div></div>{LEVELS.map((level) => { const total = lessons.filter((l) => l.level === level).length; const done = lessons.filter((l) => l.level === level && saved.completedLessons.includes(l.id)).length; return <div className="skill-row" key={level}><span>{level}</span><div className="skill-track"><span style={{ width: `${total ? done / total * 100 : 0}%` }} /></div><small>{done}/{total}</small></div>; })}</div>
@@ -982,6 +999,13 @@ function App() {
                     {lessonChecked && <div className={`feedback-box ${lessonChoice === currentLesson.answer ? "success" : ""}`}>{lessonChoice === currentLesson.answer ? "آفرین! پاسخ درست است. " : "پاسخ درست: " + currentLesson.answer + ". "}{currentLesson.feedback}</div>}
                   </div>
                   <div className="panel"><h3>واژگان این درس</h3>{currentLesson.words.map((word) => <div className="review-card" key={word.word}><strong dir="ltr">{word.word}</strong><span>{word.meaning}</span><p dir="ltr">{word.example}</p><button className="button button-ghost" onClick={() => markReviewed(word.word, "hard")}>افزودن به مرور</button></div>)}</div>
+                  <section className="panel integrated-practice"><div className="panel-heading"><div><span className="eyebrow">تمرین یکپارچه</span><h3>همین درس را با چهار مهارت یاد بگیر</h3><p>گرامر و واژگان را بلافاصله در شنیدن، گفتن و نوشتن به کار ببر.</p></div></div>
+                    <div className="integrated-skill-actions">
+                      <div className="integrated-skill"><span className="skill-big-icon blue-icon">♫</span><div><strong>شنیدن · Listening</strong><p>مثال همین درس را با تلفظ انگلیسی گوش بده.</p><button className="button button-ghost" onClick={speakLessonExample}>پخش مثال انگلیسی 🔊</button></div></div>
+                      <div className="integrated-skill"><span className="skill-big-icon orange-icon">◉</span><div><strong>گفتن · Speaking</strong><p>مثال را با صدای بلند تکرار کن؛ بعد تمرین گفتار را ثبت کن.</p><button className="button button-ghost" onClick={() => { recordSkill("speaking"); setNotice("تمرین گفتاری این درس ثبت شد. برای بازخورد گفتار می‌توانی از بخش گفتار هم استفاده کنی."); }}>تمرین گفتاری را انجام دادم ✓</button><button className="text-button" onClick={() => go("speaking")}>بازخورد گفتار ←</button></div></div>
+                      <div className="integrated-skill"><span className="skill-big-icon green-icon">✎</span><div className="integrated-writing"><strong>نوشتن · Writing</strong><p>با موضوع همین درس یک جملهٔ انگلیسی بنویس.</p><textarea className="text-input" rows={3} value={writingText} onChange={(event) => setWritingText(event.target.value)} placeholder={currentLesson.example} /><button className="button button-ghost" onClick={() => { checkWriting(); if (writingText.trim().length >= 8) recordSkill("writing"); }}>بررسی نوشته و ثبت تمرین</button>{writingFeedback && <p className="notice">{writingFeedback}</p>}</div></div>
+                    </div><p className="integrated-note">خواندن و درک مطلب با سؤال همین درس سنجیده می‌شود. پاسخ درست، پیشرفت مهارت خواندن را هم ثبت می‌کند.</p>
+                  </section>
                   {notice && <p className="notice">{notice}</p>}
                   <div className="lesson-controls">
                     <button className="button button-ghost" disabled={lessonIndex === 0} onClick={() => { setLessonIndex(Math.max(0, lessonIndex - 1)); setLessonChoice(""); setLessonChecked(false); }}>→ درس قبل</button>
