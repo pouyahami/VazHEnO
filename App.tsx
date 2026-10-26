@@ -4,6 +4,7 @@ import "./App.css";
 import StageAssessment from "./StageAssessment";
 import ListeningPractice from "./ListeningPractice";
 import SpeakingPractice from "./SpeakingPractice";
+import ImmersivePractice from "./ImmersivePractice";
 import { expandedLessons } from "./ExpandedLessons";
 
 type Level = "A0" | "A1" | "A2" | "B1" | "B2" | "C1";
@@ -1042,6 +1043,7 @@ function App() {
                   )}
                   <div className="example-box"><span>{uiText("مثال انگلیسی", "English example")}</span><strong dir="ltr">{currentLesson.example}</strong><p>{currentLesson.translation}</p></div>
                   <div className="tip-box"><span>{uiText("✦ نکتهٔ مهم", "✦ Key tip")}</span><p>{currentLesson.tip}</p></div>
+                  <ImmersivePractice title={currentLesson.title} category={currentLesson.category} example={currentLesson.example} translation={currentLesson.translation} />
                   <div className="lesson-question"><h3>{currentLesson.question}</h3>
                     <div className="inline-options">{currentLesson.options.map((option) => <button key={option} className={`quiz-option ${lessonChoice === option ? "selected" : ""}`} onClick={() => { setLessonChoice(option); setLessonChecked(false); setNotice(""); }}>{option}</button>)}</div>
                     <button className="button button-primary" onClick={checkLesson}>{uiText("بررسی پاسخ", "Check answer")}</button>
