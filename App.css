@@ -2280,3 +2280,178 @@ button:not(:disabled) {
   .lesson-slide.rtl-book.page-turning::before,
   .lesson-slide.rtl-book.page-turning::after { animation-duration:1ms !important; }
 }
+
+
+/* Vazheno dark theme: accessible contrast across the learning workspace. */
+.app-shell.dark-mode {
+  color: #e8e9f6;
+  background: #11121d;
+  --navy: #f0efff;
+  --muted: #a7a9c1;
+  --border: #303247;
+  --surface: #1b1d2b;
+}
+.dark-mode .topbar {
+  background: rgba(20, 21, 34, .94);
+  border-bottom-color: #303247;
+}
+.dark-mode .top-links button,
+.dark-mode .text-button { color: #c1c2d8; }
+.dark-mode .brand { color: #f1efff; }
+.dark-mode .hero,
+.dark-mode .section-block,
+.dark-mode .workspace,
+.dark-mode .workspace-content { color: #e8e9f6; }
+.dark-mode .hero-description,
+.dark-mode .section-heading p,
+.dark-mode .feature-card p,
+.dark-mode .page-heading p,
+.dark-mode .panel p,
+.dark-mode .site-footer p { color: #b1b3ca; }
+.dark-mode .feature-card,
+.dark-mode .panel,
+.dark-mode .metric-card,
+.dark-mode .stats-strip,
+.dark-mode .path-lesson,
+.dark-mode .review-card,
+.dark-mode .skill-card,
+.dark-mode .profile-skill,
+.dark-mode .integrated-skill,
+.dark-mode .grammar-guide,
+.dark-mode .onboarding-card,
+.dark-mode .placement-card,
+.dark-mode .lesson-main-card,
+.dark-mode .alphabet-card,
+.dark-mode .ielts-card {
+  color: #e8e9f6;
+  background: #1b1d2b;
+  border-color: #34364c;
+}
+.dark-mode .feature-card h3,
+.dark-mode .panel h2,
+.dark-mode .panel h3,
+.dark-mode .metric-card strong,
+.dark-mode .path-lesson strong,
+.dark-mode .review-word,
+.dark-mode .skill-card h3,
+.dark-mode .profile-skill-top strong,
+.dark-mode .integrated-skill strong,
+.dark-mode .page-heading h1,
+.dark-mode .section-heading h2 { color: #f1efff; }
+.dark-mode .sidebar {
+  background: #171927;
+  border-color: #303247;
+}
+.dark-mode .sidebar button { color: #c3c4d9; }
+.dark-mode .sidebar button.active,
+.dark-mode .sidebar button:hover { background: #292442; color: #c5b8ff; }
+.dark-mode input,
+.dark-mode textarea,
+.dark-mode select,
+.dark-mode .text-input,
+.dark-mode .answer-input {
+  color: #f0efff;
+  background: #141624;
+  border-color: #41435b;
+}
+.dark-mode input::placeholder,
+.dark-mode textarea::placeholder { color: #8f91aa; }
+.dark-mode .button-ghost,
+.dark-mode .theme-toggle {
+  color: #e7e5ff;
+  background: #24263a;
+  border-color: #41435b;
+}
+.dark-mode .top-links.is-open {
+  background: #171927;
+  border-color: #303247;
+}
+.dark-mode .site-footer {
+  color: #b8bad0;
+  background: #151624;
+  border-top: 1px solid #303247;
+}
+.dark-mode .grammar-guide { background: #202137; border-color: #3d3a60; color: #e8e9f6; }
+.dark-mode .grammar-guide h3 { color: #c3b7ff; }
+.dark-mode .grammar-formula { background: #292744; }
+.dark-mode .grammar-mistake { background: #332a22; border-color: #b9823b; }
+.dark-mode .integrated-note,
+.dark-mode .onboarding-note { color: #d1caff; background: #292442; }
+.dark-mode .goal-choice { color: #d7d7e8; background: #1c1e2d; border-color: #383a50; }
+.dark-mode .goal-choice.selected { background: #292442; border-color: #8874e8; color: #d1c7ff; }
+.dark-mode .placement-navigation { background: #171927ee; }
+.dark-mode .page-turn-status { background: #242238; border-color: #4d467a; color: #d1c7ff; }
+.dark-mode .floating-note { color: #ecebff; background: #24263a; border-color: #3b3d54; }
+.dark-mode .welcome-banner { color: #f0efff; }
+.dark-mode .eyebrow { color: #c7c1ef; }
+.dark-mode .profile-skill-icon { background: #302b50; }
+.dark-mode .review-meaning p,
+.dark-mode .skill-card small,
+.dark-mode .profile-skill small { color: #b1b3ca; }
+.dark-mode hr,
+.dark-mode .divider { border-color: #303247; }
+.dark-mode .topbar,
+.dark-mode .panel,
+.dark-mode .feature-card,
+.dark-mode .metric-card,
+.dark-mode .path-lesson,
+.dark-mode .review-card,
+.dark-mode .skill-card,
+.dark-mode .profile-skill,
+.dark-mode .integrated-skill,
+.dark-mode input,
+.dark-mode textarea,
+.dark-mode select { transition: background-color .2s ease, border-color .2s ease, color .2s ease; }
+@media (prefers-reduced-motion: reduce) {
+  .dark-mode * { transition-duration: 0.01ms !important; }
+}
+
+@media (max-width: 600px) { .top-actions .theme-toggle { display: inline-flex; align-items: center; gap: 5px; padding: 8px 9px; font-size: 11px; } }
+
+
+/* Homepage polish: tighter desktop rhythm, stronger contrast, calmer mobile header. */
+:root { --muted: #686980; }
+.section-block {
+  padding-top: 66px;
+  padding-bottom: 54px;
+}
+.section-heading { margin-bottom: 26px; }
+.feature-card { min-height: 195px; }
+.stats-strip { margin-bottom: 0; }
+.mini-label { color: #686980; font-weight: 700; }
+.stats-strip span,
+.footer-inner p,
+.footer-inner > span,
+.section-heading p,
+.feature-card p,
+.card-footer,
+.mini-label { color: #686980; }
+.hero { min-height: 480px; padding-top: 48px; padding-bottom: 48px; }
+.lesson-illustration { margin-top: 22px; margin-bottom: 16px; }
+.persian-example { margin-bottom: 12px; }
+@media (min-width: 761px) {
+  .hero-visual { min-height: 410px; }
+  .section-block + .section-block { padding-top: 48px; }
+}
+@media (max-width: 760px) {
+  .brand-name { font-size: 18px; }
+  .topbar-inner { gap: 8px; }
+  .top-actions { gap: 5px; }
+  .top-actions .theme-toggle { width: 38px; min-width: 38px; padding: 8px 0; justify-content: center; }
+  .top-actions .theme-toggle > span:last-child { display: none; }
+  .hero { min-height: 0; padding-top: 34px; }
+  .section-block { padding-top: 48px; padding-bottom: 38px; }
+}
+@media (max-width: 400px) {
+  .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
+  .brand-name { font-size: 16px; }
+  .topbar-inner { width: calc(100% - 20px); gap: 5px; }
+  .top-actions .small-button { padding: 8px; font-size: 10px; }
+}
+/* Dark theme overrides for the improved light-theme text contrast. */
+.dark-mode .mini-label,
+.dark-mode .stats-strip span,
+.dark-mode .footer-inner p,
+.dark-mode .footer-inner > span,
+.dark-mode .section-heading p,
+.dark-mode .feature-card p { color: #b8bad0; }
