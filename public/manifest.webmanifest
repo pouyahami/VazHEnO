@@ -1,0 +1,20 @@
+{
+  "name": "واژه‌نو | یادگیری انگلیسی",
+  "short_name": "واژه‌نو",
+  "description": "یادگیری انگلیسی با آموزش فارسی، تمرین فعال و مرور فاصله‌دار",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8f8fc",
+  "theme_color": "#655bd7",
+  "icons": [
+    {
+      "src": "/vazheno-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
