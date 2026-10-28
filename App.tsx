@@ -896,13 +896,11 @@ function App() {
               <div className="glow-orb glow-one" />
               <div className="glow-orb glow-two" />
               <div className="learning-card main-learning-card">
-                <div className="learning-card-top"><span className="mini-label">درس نمونه</span><span className="lesson-number">A0 / C1</span></div>
+                <div className="learning-card-top"><span className="mini-label">نمونه‌ای از مسیر یادگیری</span></div>
                 <div className="lesson-illustration">Aa</div>
                 <h3>اولین جملهٔ تو</h3>
                 <p className="english-example">I am learning English.</p>
                 <p className="persian-example">من دارم انگلیسی یاد می‌گیرم.</p>
-                <div className="card-progress"><span /></div>
-                <div className="card-footer"><span>پیشرفت دوره</span><strong>{progress}٪</strong></div>
               </div>
               <div className="floating-note note-top"><span className="note-icon purple-icon">✦</span><div><strong>مسیر شخصی‌سازی‌شده</strong><small>بر اساس نتیجهٔ آزمون</small></div></div>
               <div className="floating-note note-bottom"><span className="note-icon green-icon">✓</span><div><strong>تمرین و مرور</strong><small>با ذخیرهٔ پیشرفت</small></div></div>
