@@ -684,6 +684,8 @@ function App() {
         if (snapshot.exists()) {
           const cloudState = snapshot.data().progress as Partial<SavedState> | undefined;
           if (cloudState && typeof cloudState === "object") {
+            // Once a cloud record exists, it is the source of truth for this account.
+            // This avoids copying one browser user's local progress into another account.
             setSaved({
               ...emptyState,
               ...cloudState,
@@ -693,8 +695,12 @@ function App() {
               placementHistory: Array.isArray(cloudState.placementHistory) ? cloudState.placementHistory : [],
               skillProgress: { ...emptyState.skillProgress, ...(cloudState.skillProgress ?? {}) },
             });
+          } else {
+            // First sign-in for this account: migrate the browser's existing progress.
+            await setDoc(progressRef, { progress: loadSaved(), updatedAt: new Date().toISOString() });
           }
         } else {
+          // New account document: seed it with this browser's current progress.
           await setDoc(progressRef, { progress: loadSaved(), updatedAt: new Date().toISOString() });
         }
         if (!cancelled) setCloudReady(true);
