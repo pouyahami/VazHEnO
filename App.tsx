@@ -8,6 +8,7 @@ import ImmersivePractice from "./ImmersivePractice";
 import DailyLearning from "./DailyLearning";
 import AlphabetCourse from "./AlphabetCourse";
 import IeltsCourse from "./IeltsCourse";
+import SmartLearning from "./SmartLearning";
 import { expandedLessons } from "./ExpandedLessons";
 
 type Level = "A0" | "A1" | "A2" | "B1" | "B2" | "C1";
@@ -868,6 +869,7 @@ function App() {
           <nav className={`top-links ${mobileMenu ? "is-open" : ""}`}>
             <button onClick={() => go("home")}>{uiText("صفحهٔ اصلی", "Home")}</button>
             <button onClick={() => go("path")}>{uiText("مسیر یادگیری", "Learning path")}</button>
+            <button onClick={() => go("review")}>{uiText("مرور هوشمند", "Smart review")}</button>
             <button onClick={() => go("skills")}>{uiText("مهارت‌ها", "Skills")}</button>
             <button onClick={() => go("assessment")}>{uiText("ارزیابی مرحله‌ای", "Stage assessment")}</button>
           </nav>
@@ -1104,23 +1106,18 @@ function App() {
             )}
 
             {page === "review" && (
-              <>
-                <div className="page-heading"><div><span className="eyebrow">برای ماندگاری</span><h1>مرور هوشمند</h1><p>اول معنی را به خاطر بیاور؛ سپس پاسخ را بررسی کن.</p></div><span className="level-pill">{reviewQueue.length} واژهٔ موعدرسیده</span></div>
-                <div className="review-list">
-                  {(reviewQueue.length ? reviewQueue : reviewWords.filter((word) => !saved.reviewedWords.includes(word.word)).slice(0, 12)).map((item) => (
-                    <article className="panel review-card" key={item.word}>
-                      <div className="review-word" dir="ltr">{item.word}</div>
-                      <div className="review-meaning">
-                        {reviewAnswer[item.word] ? <><strong>{item.meaning}</strong><p dir="ltr">{item.example}</p></> : <span>اول معنی این واژه را به خاطر بیاور...</span>}
-                        <input className="text-input" value={reviewInput[item.word] ?? ""} onChange={(event) => setReviewInput((current) => ({ ...current, [item.word]: event.target.value }))} placeholder="معنی فارسی (اختیاری)" />
-                      </div>
-                      {!reviewAnswer[item.word] ? <button className="button button-primary" onClick={() => setReviewAnswer((current) => ({ ...current, [item.word]: true }))}>نمایش پاسخ</button> : <div className="review-actions"><button className="button button-primary" onClick={() => markReviewed(item.word, "easy")}>بلدم ✓</button><button className="button button-ghost" onClick={() => markReviewed(item.word, "hard")}>نیاز به تمرین</button></div>}
-                      {reviewFeedback[item.word] && <p className="notice">{reviewFeedback[item.word]}</p>}
-                    </article>
-                  ))}
-                </div>
-                {reviewQueue.length === 0 && <div className="info-note">واژهٔ موعدرسیده‌ای برای مرور نداری؛ واژه‌های جدید را از درس‌ها اضافه کن. مرورهای بعدی طبق زمان‌بندی ذخیره‌شده دوباره ظاهر می‌شوند.</div>}
-              </>
+              <SmartLearning
+                lessons={lessons}
+                currentLevel={saved.placementResult ?? saved.level}
+                onLevelChange={(level) => {
+                  updateSaved({
+                    level,
+                    placementResult: level,
+                    currentLessonId: lessons.find((lesson) => lesson.level === level)?.id ?? "a0-1",
+                  });
+                  setNotice(`سطح پیشنهادی ${level} ذخیره شد و مسیر یادگیری به‌روزرسانی شد.`);
+                }}
+              />
             )}
 
             {page === "skills" && (
