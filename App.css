@@ -2405,3 +2405,5 @@ button:not(:disabled) {
 @media (prefers-reduced-motion: reduce) {
   .dark-mode * { transition-duration: 0.01ms !important; }
 }
+
+@media (max-width: 600px) { .top-actions .theme-toggle { display: inline-flex; align-items: center; gap: 5px; padding: 8px 9px; font-size: 11px; } }
