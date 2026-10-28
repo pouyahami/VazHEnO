@@ -1,5 +1,9 @@
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { User } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import FirebaseAccount from "./FirebaseAccount";
+import { db } from "./firebase";
 import "./App.css";
 import StageAssessment from "./StageAssessment";
 import ListeningPractice from "./ListeningPractice";
@@ -620,6 +624,12 @@ const GRAMMAR_GUIDES: Record<string, { rule: string; form: string; examples: str
 };
 function App() {
   const [saved, setSaved] = useState<SavedState>(loadSaved);
+  const [account, setAccount] = useState<User | null>(null);
+  const [cloudReady, setCloudReady] = useState(false);
+  const handleUserChange = useCallback((user: User | null) => {
+    setAccount(user);
+    setCloudReady(false);
+  }, []);
   const [darkMode, setDarkMode] = useState(() => { try { const preference = localStorage.getItem("vazheno-theme"); if (preference === "dark") return true; if (preference === "light") return false; return window.matchMedia("(prefers-color-scheme: dark)").matches; } catch { return false; } });
   useEffect(() => { try { localStorage.setItem("vazheno-theme", darkMode ? "dark" : "light"); } catch { /* Session-only fallback. */ } }, [darkMode]);
   const activeLevel = saved.placementResult ?? saved.level;
@@ -659,6 +669,53 @@ function App() {
       setNotice("ذخیره‌سازی مرورگر در دسترس نیست؛ فضای ذخیره‌سازی را بررسی کن.");
     }
   }, [saved]);
+
+  useEffect(() => {
+    if (!account || !db) {
+      setCloudReady(false);
+      return;
+    }
+    let cancelled = false;
+    const syncInitial = async () => {
+      try {
+        const progressRef = doc(db, "users", account.uid, "private", "progress");
+        const snapshot = await getDoc(progressRef);
+        if (cancelled) return;
+        if (snapshot.exists()) {
+          const cloudState = snapshot.data().progress as Partial<SavedState> | undefined;
+          if (cloudState && typeof cloudState === "object") {
+            setSaved({
+              ...emptyState,
+              ...cloudState,
+              completedLessons: Array.isArray(cloudState.completedLessons) ? cloudState.completedLessons : [],
+              reviewedWords: Array.isArray(cloudState.reviewedWords) ? cloudState.reviewedWords : [],
+              reviewDates: cloudState.reviewDates ?? {},
+              placementHistory: Array.isArray(cloudState.placementHistory) ? cloudState.placementHistory : [],
+              skillProgress: { ...emptyState.skillProgress, ...(cloudState.skillProgress ?? {}) },
+            });
+          }
+        } else {
+          await setDoc(progressRef, { progress: loadSaved(), updatedAt: new Date().toISOString() });
+        }
+        if (!cancelled) setCloudReady(true);
+      } catch (error) {
+        console.error("Vazheno cloud progress load failed", error);
+        if (!cancelled) setNotice("همگام‌سازی ابری انجام نشد؛ قوانین Firestore و اتصال اینترنت را بررسی کن. پیشرفت محلی همچنان ذخیره می‌شود.");
+      }
+    };
+    void syncInitial();
+    return () => { cancelled = true; };
+  }, [account]);
+
+  useEffect(() => {
+    if (!account || !db || !cloudReady) return;
+    const progressRef = doc(db, "users", account.uid, "private", "progress");
+    setDoc(progressRef, { progress: saved, updatedAt: new Date().toISOString() })
+      .catch((error) => {
+        console.error("Vazheno cloud progress save failed", error);
+        setNotice("ذخیرهٔ محلی انجام شد، اما ذخیرهٔ ابری با خطا روبه‌رو شد.");
+      });
+  }, [saved, account, cloudReady]);
 
   const updateSaved = (patch: Partial<SavedState>) => {
     setSaved((current) => ({ ...current, ...patch }));
@@ -877,6 +934,7 @@ function App() {
             <button className="button button-ghost small-button theme-toggle" onClick={() => setDarkMode((current) => !current)} aria-label={darkMode ? uiText("فعال کردن حالت روشن", "Switch to light mode") : uiText("فعال کردن حالت تاریک", "Switch to dark mode")} aria-pressed={darkMode} title={darkMode ? uiText("حالت روشن", "Light mode") : uiText("حالت تاریک", "Dark mode")}><span aria-hidden="true">{darkMode ? "☀️" : "🌙"}</span><span>{darkMode ? uiText("روشن", "Light") : uiText("تاریک", "Dark")}</span></button>
             <button className="button button-ghost small-button" onClick={() => go("dashboard")}>{uiText("فضای یادگیری", "Dashboard")}</button>
             <button className="button button-primary small-button" onClick={startQuiz}>{uiText("تعیین سطح", "Placement test")}</button>
+            <FirebaseAccount onUserChange={handleUserChange} />
           </div>
         </div>
       </header>
