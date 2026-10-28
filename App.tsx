@@ -619,6 +619,8 @@ const GRAMMAR_GUIDES: Record<string, { rule: string; form: string; examples: str
 };
 function App() {
   const [saved, setSaved] = useState<SavedState>(loadSaved);
+  const [darkMode, setDarkMode] = useState(() => { try { const preference = localStorage.getItem("vazheno-theme"); if (preference === "dark") return true; if (preference === "light") return false; return window.matchMedia("(prefers-color-scheme: dark)").matches; } catch { return false; } });
+  useEffect(() => { try { localStorage.setItem("vazheno-theme", darkMode ? "dark" : "light"); } catch { /* Session-only fallback. */ } }, [darkMode]);
   const activeLevel = saved.placementResult ?? saved.level;
   const isEnglishSite = LEVELS.indexOf(activeLevel) >= LEVELS.indexOf("A1");
   const uiText = (fa: string, en: string) => isEnglishSite ? en : fa;
@@ -855,7 +857,7 @@ function App() {
   };
 
   return (
-    <div className={`app-shell ${isEnglishSite ? "english-site" : ""}`} dir={isEnglishSite ? "ltr" : "rtl"} lang={isEnglishSite ? "en" : "fa"}>
+    <div className={`app-shell ${isEnglishSite ? "english-site" : ""} ${darkMode ? "dark-mode" : ""}`} dir={isEnglishSite ? "ltr" : "rtl"} lang={isEnglishSite ? "en" : "fa"}>
       <header className="topbar">
         <div className="topbar-inner">
           <button className="brand" onClick={() => go("home")} aria-label={uiText("صفحه اصلی واژه‌نو", "Vazheno home")}>
@@ -870,6 +872,7 @@ function App() {
             <button onClick={() => go("assessment")}>{uiText("ارزیابی مرحله‌ای", "Stage assessment")}</button>
           </nav>
           <div className="top-actions">
+            <button className="button button-ghost small-button theme-toggle" onClick={() => setDarkMode((current) => !current)} aria-label={darkMode ? uiText("فعال کردن حالت روشن", "Switch to light mode") : uiText("فعال کردن حالت تاریک", "Switch to dark mode")} aria-pressed={darkMode} title={darkMode ? uiText("حالت روشن", "Light mode") : uiText("حالت تاریک", "Dark mode")}><span aria-hidden="true">{darkMode ? "☀️" : "🌙"}</span><span>{darkMode ? uiText("روشن", "Light") : uiText("تاریک", "Dark")}</span></button>
             <button className="button button-ghost small-button" onClick={() => go("dashboard")}>{uiText("فضای یادگیری", "Dashboard")}</button>
             <button className="button button-primary small-button" onClick={startQuiz}>{uiText("تعیین سطح", "Placement test")}</button>
           </div>
