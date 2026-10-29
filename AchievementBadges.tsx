@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./AchievementBadges.css";
 
 type Level = "A0" | "A1" | "A2" | "B1" | "B2" | "C1";
@@ -11,6 +11,7 @@ type Props = {
   reviewedWords: number;
   skillProgress: Record<string, number>;
   totalMinutes: number;
+  studyStreak?: number;
 };
 
 type Badge = {
@@ -23,6 +24,26 @@ type Badge = {
 };
 
 const LEVEL_ORDER: Level[] = ["A0", "A1", "A2", "B1", "B2", "C1"];
+const SEEN_KEY = "vazheno-badges-seen-v1";
+
+function loadSeen(): string[] {
+  try {
+    const raw = localStorage.getItem(SEEN_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveSeen(ids: string[]) {
+  try {
+    localStorage.setItem(SEEN_KEY, JSON.stringify(ids));
+  } catch {
+    /* ignore */
+  }
+}
 
 export default function AchievementBadges({
   completedLessons,
@@ -32,6 +53,7 @@ export default function AchievementBadges({
   reviewedWords,
   skillProgress,
   totalMinutes,
+  studyStreak = 0,
 }: Props) {
   const hours = Math.floor(totalMinutes / 60);
   const mins = totalMinutes % 60;
@@ -60,9 +82,7 @@ export default function AchievementBadges({
         description: "۵ درس را با موفقیت تمام کردی",
         earned: completedLessons >= 5,
         progress:
-          completedLessons >= 5
-            ? undefined
-            : `${completedLessons} از ۵ درس`,
+          completedLessons >= 5 ? undefined : `${completedLessons} از ۵ درس`,
       },
       {
         id: "ten-lessons",
@@ -71,9 +91,7 @@ export default function AchievementBadges({
         description: "۱۰ درس را تمام کردی؛ مسیرت جدی شده",
         earned: completedLessons >= 10,
         progress:
-          completedLessons >= 10
-            ? undefined
-            : `${completedLessons} از ۱۰ درس`,
+          completedLessons >= 10 ? undefined : `${completedLessons} از ۱۰ درس`,
       },
       {
         id: "twenty-five",
@@ -82,9 +100,7 @@ export default function AchievementBadges({
         description: "۲۵ درس؛ نشان پشتکار",
         earned: completedLessons >= 25,
         progress:
-          completedLessons >= 25
-            ? undefined
-            : `${completedLessons} از ۲۵ درس`,
+          completedLessons >= 25 ? undefined : `${completedLessons} از ۲۵ درس`,
       },
       {
         id: "half-path",
@@ -123,6 +139,24 @@ export default function AchievementBadges({
         earned: studiedToday >= 15,
         progress:
           studiedToday >= 15 ? undefined : `${studiedToday} از ۱۵ دقیقه امروز`,
+      },
+      {
+        id: "streak-3",
+        icon: "🔥",
+        title: "۳ روز پیاپی",
+        description: "سه روز پشت‌سرهم مطالعه کردی",
+        earned: studyStreak >= 3,
+        progress:
+          studyStreak >= 3 ? undefined : `${studyStreak} از ۳ روز پیاپی`,
+      },
+      {
+        id: "streak-7",
+        icon: "⚡",
+        title: "۷ روز پیاپی",
+        description: "یک هفته بدون وقفه؛ عادت ساخته شد",
+        earned: studyStreak >= 7,
+        progress:
+          studyStreak >= 7 ? undefined : `${studyStreak} از ۷ روز پیاپی`,
       },
       {
         id: "level-a1",
@@ -184,9 +218,33 @@ export default function AchievementBadges({
     skillsActive,
     totalMinutes,
     timeLabel,
+    studyStreak,
   ]);
 
   const earnedCount = badges.filter((b) => b.earned).length;
+  const [toast, setToast] = useState<Badge | null>(null);
+  const ready = useRef(false);
+
+  useEffect(() => {
+    const earnedIds = badges.filter((b) => b.earned).map((b) => b.id);
+    const seen = loadSeen();
+    const fresh = earnedIds.filter((id) => !seen.includes(id));
+
+    if (!ready.current) {
+      // First mount: mark current earned as seen so we don't spam old badges
+      saveSeen([...new Set([...seen, ...earnedIds])]);
+      ready.current = true;
+      return;
+    }
+
+    if (fresh.length > 0) {
+      const next = badges.find((b) => b.id === fresh[0]) ?? null;
+      setToast(next);
+      saveSeen([...new Set([...seen, ...earnedIds])]);
+      const timer = window.setTimeout(() => setToast(null), 4200);
+      return () => window.clearTimeout(timer);
+    }
+  }, [badges]);
 
   return (
     <section className="achievements-panel panel" dir="rtl">
@@ -196,6 +254,7 @@ export default function AchievementBadges({
           <p>
             {earnedCount} از {badges.length} نشان را گرفته‌ای · مجموع مطالعه:{" "}
             {timeLabel}
+            {studyStreak > 0 ? ` · 🔥 ${studyStreak} روز پیاپی` : ""}
           </p>
         </div>
         <span className="level-pill">🏆 {earnedCount}</span>
@@ -224,6 +283,21 @@ export default function AchievementBadges({
           </article>
         ))}
       </div>
+
+      {toast && (
+        <div className="badge-toast" role="status">
+          <span className="badge-toast-icon">{toast.icon}</span>
+          <div>
+            <strong>نشان جدید!</strong>
+            <span>
+              {toast.title} — {toast.description}
+            </span>
+          </div>
+          <button type="button" onClick={() => setToast(null)} aria-label="بستن">
+            ✕
+          </button>
+        </div>
+      )}
     </section>
   );
 }
