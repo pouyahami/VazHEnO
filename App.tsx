@@ -14,6 +14,7 @@ import AlphabetCourse from "./AlphabetCourse";
 import IeltsCourse from "./IeltsCourse";
 import SmartLearning from "./SmartLearning";
 import { expandedLessons } from "./ExpandedLessons";
+import AchievementBadges from "./AchievementBadges";
 
 type Level = "A0" | "A1" | "A2" | "B1" | "B2" | "C1";
 type Page =
