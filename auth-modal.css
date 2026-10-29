@@ -1,0 +1,263 @@
+/* Auth modal */
+.auth-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(25, 26, 61, 0.48);
+  backdrop-filter: blur(6px);
+  animation: auth-fade-in 0.18s ease;
+}
+
+.auth-modal {
+  position: relative;
+  width: min(430px, 100%);
+  border: 1px solid #eeedf6;
+  border-radius: 20px;
+  padding: 28px 26px 24px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(30, 28, 70, 0.22);
+  animation: auth-scale-in 0.2s ease;
+}
+
+.auth-modal-close {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ececf4;
+  border-radius: 10px;
+  color: #6e6e84;
+  background: #fafaff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.auth-modal-close:hover {
+  color: #3d3d55;
+  background: #f2f1f8;
+}
+
+.auth-modal-header {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.auth-modal-brand {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 14px;
+  border-radius: 14px;
+  color: white;
+  font-size: 24px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #8a6af6, #6145d3);
+  box-shadow: 0 8px 18px #7455e82b;
+}
+
+.auth-modal-header h2 {
+  margin: 0 0 8px;
+  color: var(--navy, #191a3d);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.auth-modal-header p {
+  margin: 0;
+  color: #85859a;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.auth-modal-form {
+  display: grid;
+  gap: 14px;
+}
+
+.auth-field {
+  display: grid;
+  gap: 7px;
+}
+
+.auth-field span {
+  color: #5c5c74;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.auth-field input {
+  width: 100%;
+  border: 1px solid #e8e7f2;
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: inherit;
+  background: #fbfbfe;
+  font-size: 13px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.auth-field input:focus {
+  outline: none;
+  border-color: #c4b5ff;
+  box-shadow: 0 0 0 3px #7455e818;
+  background: #fff;
+}
+
+.auth-modal-message {
+  display: block;
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #b42318;
+  background: #fff1f0;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.auth-submit {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 4px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.auth-modal-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 14px;
+  color: #a0a0b4;
+  font-size: 11px;
+}
+
+.auth-modal-divider::before,
+.auth-modal-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #ececf4;
+}
+
+.auth-google {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.auth-modal-switch {
+  margin-top: 18px;
+  text-align: center;
+  color: #7a7a90;
+  font-size: 12px;
+}
+
+.auth-modal-switch button {
+  border: 0;
+  padding: 0;
+  color: #6c4bd8;
+  background: transparent;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.auth-modal-switch button:hover {
+  text-decoration: underline;
+}
+
+@keyframes auth-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes auth-scale-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dark-mode .auth-modal {
+  border-color: #2f2f4a;
+  background: #1c1c30;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+}
+
+.dark-mode .auth-modal-close {
+  border-color: #35354f;
+  color: #b7b7cc;
+  background: #25253c;
+}
+
+.dark-mode .auth-modal-header h2 {
+  color: #f0eff8;
+}
+
+.dark-mode .auth-modal-header p,
+.dark-mode .auth-modal-switch {
+  color: #9a9ab0;
+}
+
+.dark-mode .auth-field span {
+  color: #c2c2d4;
+}
+
+.dark-mode .auth-field input {
+  border-color: #35354f;
+  color: #f0eff8;
+  background: #25253c;
+}
+
+.dark-mode .auth-field input:focus {
+  border-color: #7a66d8;
+  background: #2a2a42;
+}
+
+.dark-mode .auth-modal-divider::before,
+.dark-mode .auth-modal-divider::after {
+  background: #35354f;
+}
+
+.dark-mode .auth-google {
+  border-color: #35354f;
+  color: #d4d4e4;
+  background: #25253c;
+}
+
+.firebase-account {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.firebase-account-note,
+.firebase-account-message {
+  font-size: 11px;
+  color: var(--muted, #85869c);
+}
+
+.firebase-account-message {
+  flex-basis: 100%;
+  color: #b42318;
+}
+
+@media (max-width: 480px) {
+  .auth-modal {
+    padding: 24px 18px 20px;
+    border-radius: 16px;
+  }
+}
