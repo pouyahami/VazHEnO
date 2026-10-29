@@ -1108,10 +1108,10 @@ function App() {
                   return <div key={level} className="path-level-group">
                     <h2>{level} <span className="level-pill">{group.length} درس</span></h2>
                     <div className="path-list">
-                      {group.map((lesson) => {
-                        const done = saved.completedLessons.includes(lesson.id);
-                        return <article className={`path-lesson panel ${done ? "completed" : ""}`} key={lesson.id}>
-                          <div className="path-step">{done ? "✓" : String(lessons.indexOf(lesson) + 1).padStart(2, "0")}</div>
+                    {group.map((lesson, lessonIndex) => {
+                      const done = saved.completedLessons.includes(lesson.id);
+                      return <article className={`path-lesson panel ${done ? "completed" : ""}`} key={lesson.id}>
+                        <div className="path-step">{done ? "✓" : String(lessonIndex + 1).padStart(2, "0")}</div>
                           <div className="path-lesson-info"><div className="path-meta"><span>{lesson.level}</span><span>{lesson.minutes} دقیقه</span>{done && <span className="done-label">تکمیل‌شده</span>}</div><h3>{lesson.title}</h3><p>{lesson.category} · آموزش، مثال و تمرین</p></div>
                           <button className={done ? "button button-ghost" : "button button-primary"} onClick={() => startLesson(lesson.id)}>{done ? "مرور درس" : "شروع درس"} ←</button>
                         </article>;
