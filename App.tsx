@@ -1030,6 +1030,17 @@ function App() {
                   <div className="metric-card"><span className="metric-icon orange-icon">↻</span><span>برای مرور</span><strong>{reviewQueue.length} <small>واژه</small></strong></div>
                   <div className="metric-card"><span className="metric-icon blue-icon">◷</span><span>هدف روزانه</span><strong>{saved.dailyGoal}</strong></div>
                 </div>
+                <AchievementBadges
+                  completedLessons={saved.completedLessons.length}
+                  totalLessons={lessons.length}
+                  studiedToday={saved.studiedToday}
+                  level={saved.placementResult ?? saved.level}
+                  reviewedWords={saved.reviewedWords.length}
+                  skillProgress={saved.skillProgress}
+                  totalMinutes={lessons
+                    .filter((l) => saved.completedLessons.includes(l.id))
+                    .reduce((sum, l) => sum + l.minutes, 0)}
+                />
                 <div className="panel profile-skills"><div className="panel-heading"><div><h3>پروفایل مهارتی تو</h3><p>تمرین هر مهارت جدا ثبت می‌شود؛ درصد فعلی شاخص فعالیت است، نه نمرهٔ استاندارد یا تعیین سطح قطعی.</p></div><span className="level-pill">۴ مهارت</span></div><div className="profile-skill-grid">{([{key:"reading",en:"Reading",fa:"خواندن",icon:"文"},{key:"listening",en:"Listening",fa:"شنیدن",icon:"♫"},{key:"speaking",en:"Speaking",fa:"گفتار",icon:"◉"},{key:"writing",en:"Writing",fa:"نوشتن",icon:"✎"}] as const).map((skill) => { const score = Math.min(100, (saved.skillProgress?.[skill.key] ?? 0) * 5); return <div className="profile-skill" key={skill.key}><div className="profile-skill-top"><span className="profile-skill-icon">{skill.icon}</span><div><strong>{skill.fa}</strong><small>{skill.en}</small></div><b>{score}٪</b></div><div className="mini-progress"><span style={{width: score + "%"}} /></div><small>{saved.skillProgress?.[skill.key] ?? 0} تمرین ثبت‌شده</small></div>; })}</div></div>
                 <div className="content-grid">
                   <div className="panel"><div className="panel-heading"><div><h3>درس بعدی</h3><p>بر اساس مسیر دوره</p></div><button className="text-button" onClick={() => go("path")}>همهٔ درس‌ها ←</button></div><div className="next-lesson"><div className="next-lesson-icon">Aa</div><div className="next-lesson-info"><span className="lesson-tag">{currentLesson.level} · {currentLesson.category}</span><h4>{currentLesson.title}</h4><p>{currentLesson.minutes} دقیقه · همراه با تمرین</p></div><button className="round-arrow" onClick={() => startLesson(currentLesson.id)}>←</button></div></div>
