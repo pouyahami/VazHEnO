@@ -127,6 +127,18 @@
   margin-top: 4px;
   border-radius: 12px;
   font-size: 14px;
+  color: #fff !important;
+  background: linear-gradient(135deg, #8060ef, #6748dc) !important;
+  border: 0 !important;
+  box-shadow: 0 6px 16px #7455e82a;
+}
+
+.auth-submit:hover:not(:disabled) {
+  box-shadow: 0 9px 22px #7455e83d;
+}
+
+.auth-submit:disabled {
+  opacity: 0.65;
 }
 
 .auth-modal-divider {
@@ -255,9 +267,60 @@
   color: #b42318;
 }
 
+.auth-user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 180px;
+  border: 1px solid #ebe8f7;
+  border-radius: 999px;
+  padding: 4px 10px 4px 4px;
+  background: #f7f5ff;
+}
+
+.auth-user-avatar {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(135deg, #8a6af6, #6145d3);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.auth-user-name {
+  overflow: hidden;
+  color: #4a4a63;
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dark-mode .auth-user-chip {
+  border-color: #35354f;
+  background: #25253c;
+}
+
+.dark-mode .auth-user-name {
+  color: #d4d4e4;
+}
+
+@media (max-width: 700px) {
+  .auth-trigger-login {
+    display: none;
+  }
+}
+
 @media (max-width: 480px) {
   .auth-modal {
     padding: 24px 18px 20px;
     border-radius: 16px;
+  }
+
+  .auth-user-name {
+    max-width: 90px;
   }
 }
