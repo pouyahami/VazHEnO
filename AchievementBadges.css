@@ -83,6 +83,67 @@
   color: #2c9c71;
 }
 
+.badge-toast {
+  position: fixed;
+  z-index: 1200;
+  right: 20px;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(360px, calc(100vw - 32px));
+  border: 1px solid #ddd4ff;
+  border-radius: 16px;
+  padding: 14px 16px;
+  color: #191a3d;
+  background: #fff;
+  box-shadow: 0 18px 40px #2c24541f;
+  animation: badge-toast-in 0.25s ease;
+}
+
+.badge-toast-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 12px;
+  background: #f0ebff;
+  font-size: 22px;
+}
+
+.badge-toast strong {
+  display: block;
+  font-size: 13px;
+}
+
+.badge-toast span {
+  display: block;
+  margin-top: 3px;
+  color: #6e6e84;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.badge-toast button {
+  margin-right: auto;
+  border: 0;
+  color: #8a89a0;
+  background: transparent;
+  cursor: pointer;
+}
+
+@keyframes badge-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .dark-mode .achievement-card {
   border-color: #2f2f4a;
   background: #1c1c30;
@@ -109,8 +170,25 @@
   color: #9a9ab0;
 }
 
+.dark-mode .badge-toast {
+  border-color: #3d3568;
+  color: #f0eff8;
+  background: #1c1c30;
+}
+
+.dark-mode .badge-toast span {
+  color: #9a9ab0;
+}
+
 @media (max-width: 600px) {
   .achievements-grid {
     grid-template-columns: 1fr;
+  }
+
+  .badge-toast {
+    right: 12px;
+    left: 12px;
+    bottom: 16px;
+    max-width: none;
   }
 }
