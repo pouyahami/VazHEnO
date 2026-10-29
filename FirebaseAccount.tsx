@@ -29,7 +29,13 @@ export default function FirebaseAccount({ onUserChange }: Props) {
     return onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser);
       onUserChange(nextUser);
-      if (nextUser) setOpen(false);
+      if (nextUser) {
+        setOpen(false);
+        setEmail("");
+        setPassword("");
+        setName("");
+        setMessage("");
+      }
     });
   }, [onUserChange]);
 
@@ -40,11 +46,17 @@ export default function FirebaseAccount({ onUserChange }: Props) {
     };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
+    // Focus first input shortly after open
+    const timer = window.setTimeout(() => {
+      const first = document.querySelector<HTMLInputElement>(".auth-modal input");
+      first?.focus();
+    }, 50);
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
+      window.clearTimeout(timer);
     };
-  }, [open]);
+  }, [open, mode]);
 
   const run = async (action: () => Promise<unknown>) => {
     setBusy(true);
@@ -63,12 +75,22 @@ export default function FirebaseAccount({ onUserChange }: Props) {
         "auth/popup-closed-by-user": "پنجرهٔ ورود گوگل بسته شد.",
         "auth/unauthorized-domain": "دامنهٔ سایت در Firebase مجاز نشده است.",
         "auth/operation-not-allowed": "این روش ورود در Firebase فعال نیست.",
-        "auth/network-request-failed": "اتصال شبکه برقرار نشد؛ فیلترشکن یا اینترنت را بررسی کن.",
+        "auth/network-request-failed":
+          "اتصال شبکه برقرار نشد؛ فیلترشکن یا اینترنت را بررسی کن.",
       };
-      setMessage(messages[code] ?? "عملیات انجام نشد. تنظیمات Firebase و اتصال اینترنت را بررسی کن.");
+      setMessage(
+        messages[code] ??
+          "عملیات انجام نشد. تنظیمات Firebase و اتصال اینترنت را بررسی کن."
+      );
     } finally {
       setBusy(false);
     }
+  };
+
+  const openModal = (next: "login" | "register") => {
+    setMode(next);
+    setMessage("");
+    setOpen(true);
   };
 
   const switchMode = (next: "login" | "register") => {
@@ -85,11 +107,16 @@ export default function FirebaseAccount({ onUserChange }: Props) {
   }
 
   if (user) {
+    const label = user.displayName || user.email || "کاربر";
+    const initial = (user.displayName || user.email || "ک").trim().charAt(0).toUpperCase();
     return (
       <div className="firebase-account firebase-account-logged" dir="rtl">
-        <span className="firebase-account-note">
-          {user.displayName || user.email}
-        </span>
+        <div className="auth-user-chip" title={label}>
+          <span className="auth-user-avatar" aria-hidden="true">
+            {initial}
+          </span>
+          <span className="auth-user-name">{label}</span>
+        </div>
         <button
           className="button button-ghost small-button"
           disabled={busy}
@@ -109,24 +136,16 @@ export default function FirebaseAccount({ onUserChange }: Props) {
   return (
     <div className="firebase-account" dir="rtl">
       <button
-        className="button button-ghost small-button"
+        className="button button-ghost small-button auth-trigger-login"
         type="button"
-        onClick={() => {
-          setMode("login");
-          setMessage("");
-          setOpen(true);
-        }}
+        onClick={() => openModal("login")}
       >
         ورود
       </button>
       <button
-        className="button button-primary small-button"
+        className="button button-primary small-button auth-trigger-register"
         type="button"
-        onClick={() => {
-          setMode("register");
-          setMessage("");
-          setOpen(true);
-        }}
+        onClick={() => openModal("register")}
       >
         ساخت حساب
       </button>
