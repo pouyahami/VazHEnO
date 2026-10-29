@@ -16,6 +16,7 @@ type Props = {
 
 export default function FirebaseAccount({ onUserChange }: Props) {
   const [user, setUser] = useState<User | null>(null);
+  const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,8 +29,22 @@ export default function FirebaseAccount({ onUserChange }: Props) {
     return onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser);
       onUserChange(nextUser);
+      if (nextUser) setOpen(false);
     });
   }, [onUserChange]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
   const run = async (action: () => Promise<unknown>) => {
     setBusy(true);
@@ -56,51 +71,224 @@ export default function FirebaseAccount({ onUserChange }: Props) {
     }
   };
 
+  const switchMode = (next: "login" | "register") => {
+    setMode(next);
+    setMessage("");
+  };
+
   if (!firebaseEnabled || !auth) {
     return (
       <div className="firebase-account" dir="rtl">
-        <span className="firebase-account-note">ورود ابری هنوز تنظیم نشده است. متغیرهای Firebase را در Cloudflare Pages وارد کن.</span>
+        <span className="firebase-account-note">ورود ابری هنوز تنظیم نشده است.</span>
       </div>
     );
   }
 
   if (user) {
     return (
-      <div className="firebase-account" dir="rtl">
-        <span className="firebase-account-note">وارد شده‌ای: {user.displayName || user.email}</span>
-        <button className="button button-ghost small-button" disabled={busy} onClick={() => void run(() => signOut(auth))}>خروج</button>
-        {message && <span role="status" className="firebase-account-message">{message}</span>}
+      <div className="firebase-account firebase-account-logged" dir="rtl">
+        <span className="firebase-account-note">
+          {user.displayName || user.email}
+        </span>
+        <button
+          className="button button-ghost small-button"
+          disabled={busy}
+          onClick={() => void run(() => signOut(auth))}
+        >
+          خروج
+        </button>
+        {message && (
+          <span role="status" className="firebase-account-message">
+            {message}
+          </span>
+        )}
       </div>
     );
   }
 
   return (
     <div className="firebase-account" dir="rtl">
-      <form className="firebase-account-form" onSubmit={(event) => {
-        event.preventDefault();
-        void run(async () => {
-          if (mode === "register") {
-            const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
-            if (name.trim()) await updateProfile(credential.user, { displayName: name.trim() });
-          } else {
-            await signInWithEmailAndPassword(auth, email.trim(), password);
-          }
-        });
-      }}>
-        {mode === "register" && (
-          <input aria-label="نام نمایشی" autoComplete="name" placeholder="نام نمایشی (اختیاری)" value={name} onChange={(event) => setName(event.target.value)} />
-        )}
-        <input aria-label="ایمیل" type="email" autoComplete="email" required placeholder="ایمیل" value={email} onChange={(event) => setEmail(event.target.value)} />
-        <input aria-label="رمز عبور" type="password" autoComplete={mode === "register" ? "new-password" : "current-password"} minLength={6} required placeholder="رمز عبور (حداقل ۶ کاراکتر)" value={password} onChange={(event) => setPassword(event.target.value)} />
-        <button className="button button-primary small-button" type="submit" disabled={busy}>{busy ? "لطفاً صبر کن…" : mode === "register" ? "ثبت‌نام" : "ورود"}</button>
-      </form>
-      <div className="firebase-account-actions">
-        <button className="button button-ghost small-button" disabled={busy} onClick={() => setMode((current) => current === "login" ? "register" : "login")}>
-          {mode === "login" ? "ساخت حساب" : "قبلاً حساب دارم"}
-        </button>
-        <button className="button button-ghost small-button" disabled={busy} onClick={() => void run(() => signInWithPopup(auth, googleProvider))}>ورود با Google</button>
-      </div>
-      {message && <span role="status" className="firebase-account-message">{message}</span>}
+      <button
+        className="button button-ghost small-button"
+        type="button"
+        onClick={() => {
+          setMode("login");
+          setMessage("");
+          setOpen(true);
+        }}
+      >
+        ورود
+      </button>
+      <button
+        className="button button-primary small-button"
+        type="button"
+        onClick={() => {
+          setMode("register");
+          setMessage("");
+          setOpen(true);
+        }}
+      >
+        ساخت حساب
+      </button>
+
+      {open && (
+        <div
+          className="auth-modal-backdrop"
+          role="presentation"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setOpen(false);
+          }}
+        >
+          <div
+            className="auth-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="auth-modal-title"
+            dir="rtl"
+          >
+            <button
+              className="auth-modal-close"
+              type="button"
+              aria-label="بستن"
+              onClick={() => setOpen(false)}
+            >
+              ✕
+            </button>
+
+            <div className="auth-modal-header">
+              <div className="auth-modal-brand">و</div>
+              <h2 id="auth-modal-title">
+                {mode === "login" ? "ورود به واژه‌نو" : "ساخت حساب کاربری"}
+              </h2>
+              <p>
+                {mode === "login"
+                  ? "برای ذخیره پیشرفت و ادامه یادگیری وارد شو."
+                  : "یک حساب بساز تا پیشرفتت ذخیره شود."}
+              </p>
+            </div>
+
+            <form
+              className="auth-modal-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void run(async () => {
+                  if (mode === "register") {
+                    const credential = await createUserWithEmailAndPassword(
+                      auth,
+                      email.trim(),
+                      password
+                    );
+                    if (name.trim()) {
+                      await updateProfile(credential.user, {
+                        displayName: name.trim(),
+                      });
+                    }
+                  } else {
+                    await signInWithEmailAndPassword(
+                      auth,
+                      email.trim(),
+                      password
+                    );
+                  }
+                });
+              }}
+            >
+              {mode === "register" && (
+                <label className="auth-field">
+                  <span>نام نمایشی</span>
+                  <input
+                    aria-label="نام نمایشی"
+                    autoComplete="name"
+                    placeholder="اختیاری"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                  />
+                </label>
+              )}
+
+              <label className="auth-field">
+                <span>ایمیل</span>
+                <input
+                  aria-label="ایمیل"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
+              </label>
+
+              <label className="auth-field">
+                <span>رمز عبور</span>
+                <input
+                  aria-label="رمز عبور"
+                  type="password"
+                  autoComplete={
+                    mode === "register" ? "new-password" : "current-password"
+                  }
+                  minLength={6}
+                  required
+                  placeholder="حداقل ۶ کاراکتر"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </label>
+
+              {message && (
+                <span role="status" className="auth-modal-message">
+                  {message}
+                </span>
+              )}
+
+              <button
+                className="button button-primary auth-submit"
+                type="submit"
+                disabled={busy}
+              >
+                {busy
+                  ? "لطفاً صبر کن…"
+                  : mode === "register"
+                    ? "ثبت‌نام"
+                    : "ورود"}
+              </button>
+            </form>
+
+            <div className="auth-modal-divider">
+              <span>یا</span>
+            </div>
+
+            <button
+              className="button button-ghost auth-google"
+              type="button"
+              disabled={busy}
+              onClick={() =>
+                void run(() => signInWithPopup(auth, googleProvider))
+              }
+            >
+              ورود با Google
+            </button>
+
+            <div className="auth-modal-switch">
+              {mode === "login" ? (
+                <>
+                  حساب ندارید؟{" "}
+                  <button type="button" onClick={() => switchMode("register")}>
+                    ثبت‌نام کنید
+                  </button>
+                </>
+              ) : (
+                <>
+                  قبلاً حساب دارید؟{" "}
+                  <button type="button" onClick={() => switchMode("login")}>
+                    وارد شوید
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
