@@ -12,9 +12,10 @@ import { auth, firebaseEnabled, googleProvider } from "./firebase";
 
 type Props = {
   onUserChange: (user: User | null) => void;
+  onAuthSuccess?: (info: { user: User; isNewUser: boolean }) => void;
 };
 
-export default function FirebaseAccount({ onUserChange }: Props) {
+export default function FirebaseAccount({ onUserChange, onAuthSuccess }: Props) {
   const [user, setUser] = useState<User | null>(null);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -46,7 +47,6 @@ export default function FirebaseAccount({ onUserChange }: Props) {
     };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
-    // Focus first input shortly after open
     const timer = window.setTimeout(() => {
       const first = document.querySelector<HTMLInputElement>(".auth-modal input");
       first?.focus();
@@ -202,12 +202,14 @@ export default function FirebaseAccount({ onUserChange }: Props) {
                         displayName: name.trim(),
                       });
                     }
+                    onAuthSuccess?.({ user: credential.user, isNewUser: true });
                   } else {
-                    await signInWithEmailAndPassword(
+                    const credential = await signInWithEmailAndPassword(
                       auth,
                       email.trim(),
                       password
                     );
+                    onAuthSuccess?.({ user: credential.user, isNewUser: false });
                   }
                 });
               }}
@@ -282,7 +284,13 @@ export default function FirebaseAccount({ onUserChange }: Props) {
               type="button"
               disabled={busy}
               onClick={() =>
-                void run(() => signInWithPopup(auth, googleProvider))
+                void run(async () => {
+                  const result = await signInWithPopup(auth, googleProvider);
+                  const isNew =
+                    (result as { _tokenResponse?: { isNewUser?: boolean } })
+                      ._tokenResponse?.isNewUser === true;
+                  onAuthSuccess?.({ user: result.user, isNewUser: isNew });
+                })
               }
             >
               ورود با Google
