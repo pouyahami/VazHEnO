@@ -1,0 +1,187 @@
+import { useMemo, useState } from "react";
+
+type Level = "A0" | "A1" | "A2" | "B1" | "B2" | "C1";
+
+type Lesson = {
+  id: string;
+  level: Level;
+  title: string;
+  category: string;
+  minutes: number;
+};
+
+type Props = {
+  lessons: Lesson[];
+  completedLessons: string[];
+  userLevel: Level;
+  progress: number;
+  completedCount: number;
+  onStartLesson: (id: string) => void;
+  onOpenDaily: () => void;
+  onOpenAlphabet: () => void;
+  onOpenIelts: () => void;
+};
+
+const LEVELS: Level[] = ["A0", "A1", "A2", "B1", "B2", "C1"];
+
+export default function PathHub({
+  lessons,
+  completedLessons,
+  userLevel,
+  progress,
+  completedCount,
+  onStartLesson,
+  onOpenDaily,
+  onOpenAlphabet,
+  onOpenIelts,
+}: Props) {
+  const [openLevel, setOpenLevel] = useState<Level | null>(userLevel);
+
+  const byLevel = useMemo(() => {
+    const map: Record<Level, Lesson[]> = {
+      A0: [],
+      A1: [],
+      A2: [],
+      B1: [],
+      B2: [],
+      C1: [],
+    };
+    for (const lesson of lessons) {
+      if (map[lesson.level]) map[lesson.level].push(lesson);
+    }
+    return map;
+  }, [lessons]);
+
+  return (
+    <div dir="rtl">
+      <div className="page-heading">
+        <div>
+          <span className="eyebrow">نقشهٔ راه تو</span>
+          <h1>مسیر یادگیری</h1>
+          <p>اول سطح خودت را باز کن؛ دوره‌های ویژه جدا هستند.</p>
+        </div>
+        <span className="level-pill">سطح فعلی: {userLevel}</span>
+      </div>
+
+      <div className="path-overview panel">
+        <div>
+          <span>پیشرفت دوره</span>
+          <strong>{progress}٪</strong>
+        </div>
+        <div className="mini-progress">
+          <span style={{ width: `${progress}%` }} />
+        </div>
+        <p>
+          {completedCount} درس از {lessons.length} درس تکمیل شده است.
+        </p>
+      </div>
+
+      <div
+        className="content-grid"
+        style={{ marginBottom: 20, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}
+      >
+        <button className="panel" type="button" onClick={onOpenDaily} style={{ textAlign: "right", cursor: "pointer" }}>
+          <span className="eyebrow">روزانه</span>
+          <h3 style={{ margin: "8px 0 4px" }}>تمرین روزانه</h3>
+          <p style={{ margin: 0, color: "#6e6e84", fontSize: 13 }}>واژه، جمله و مرور کوتاه هر روز</p>
+        </button>
+        <button className="panel" type="button" onClick={onOpenAlphabet} style={{ textAlign: "right", cursor: "pointer" }}>
+          <span className="eyebrow">مبتدی</span>
+          <h3 style={{ margin: "8px 0 4px" }}>آموزش الفبا</h3>
+          <p style={{ margin: 0, color: "#6e6e84", fontSize: 13 }}>حروف انگلیسی از صفر</p>
+        </button>
+        <button className="panel" type="button" onClick={onOpenIelts} style={{ textAlign: "right", cursor: "pointer" }}>
+          <span className="eyebrow">آزمون</span>
+          <h3 style={{ margin: "8px 0 4px" }}>دوره IELTS</h3>
+          <p style={{ margin: 0, color: "#6e6e84", fontSize: 13 }}>آمادگی مهارت‌های آیلتس</p>
+        </button>
+      </div>
+
+      <div className="panel" style={{ marginBottom: 12 }}>
+        <div className="panel-heading">
+          <div>
+            <h3>درس‌های سطح‌بندی‌شده</h3>
+            <p>روی هر سطح بزن تا درس‌هایش باز شود. سطح فعلی‌ات پیش‌فرض باز است.</p>
+          </div>
+        </div>
+
+        {LEVELS.map((level) => {
+          const group = byLevel[level];
+          const done = group.filter((l) => completedLessons.includes(l.id)).length;
+          const isOpen = openLevel === level;
+          const isCurrent = level === userLevel;
+
+          return (
+            <div key={level} className="path-level-group" style={{ marginBottom: 10 }}>
+              <button
+                type="button"
+                className="button button-ghost"
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  padding: "14px 16px",
+                  borderRadius: 14,
+                  border: isCurrent ? "1px solid #cbbdff" : "1px solid #eeedf6",
+                  background: isCurrent ? "#f7f4ff" : "#fbfbfe",
+                }}
+                onClick={() => setOpenLevel(isOpen ? null : level)}
+                aria-expanded={isOpen}
+              >
+                <span style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 700 }}>
+                  <span>{isOpen ? "▾" : "▸"}</span>
+                  سطح {level}
+                  {isCurrent && (
+                    <span className="level-pill" style={{ fontSize: 11 }}>
+                      سطح تو
+                    </span>
+                  )}
+                </span>
+                <span style={{ color: "#85859b", fontSize: 13 }}>
+                  {done}/{group.length} درس
+                </span>
+              </button>
+
+              {isOpen && (
+                <div className="path-list" style={{ marginTop: 10 }}>
+                  {group.map((lesson, lessonIndex) => {
+                    const finished = completedLessons.includes(lesson.id);
+                    return (
+                      <article
+                        className={`path-lesson panel ${finished ? "completed" : ""}`}
+                        key={lesson.id}
+                      >
+                        <div className="path-step">
+                          {finished ? "✓" : String(lessonIndex + 1).padStart(2, "0")}
+                        </div>
+                        <div className="path-lesson-info">
+                          <div className="path-meta">
+                            <span>{lesson.level}</span>
+                            <span>{lesson.minutes} دقیقه</span>
+                            {finished && <span className="done-label">تکمیل‌شده</span>}
+                          </div>
+                          <h3>{lesson.title}</h3>
+                          <p>
+                            {lesson.category} · آموزش، مثال و تمرین
+                          </p>
+                        </div>
+                        <button
+                          className={finished ? "button button-ghost" : "button button-primary"}
+                          onClick={() => onStartLesson(lesson.id)}
+                        >
+                          {finished ? "مرور درس" : "شروع درس"} ←
+                        </button>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
