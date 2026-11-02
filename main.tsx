@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import "./auth-modal.css";
+import "./polish.css";
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
