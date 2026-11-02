@@ -32,6 +32,15 @@ const LEVEL_META: Record<Level, string> = {
   C1: "پیشرفته · متن و گفتار پیچیده",
 };
 
+/** درس i وقتی باز است که همهٔ درس‌های قبلش در همان سطح تکمیل شده باشند (یا خودش تکمیل شده باشد). */
+function isLessonUnlocked(group: Lesson[], index: number, completedLessons: string[]) {
+  if (index <= 0) return true;
+  for (let i = 0; i < index; i++) {
+    if (!completedLessons.includes(group[i].id)) return false;
+  }
+  return true;
+}
+
 export default function PathHub({
   lessons,
   completedLessons,
@@ -70,14 +79,14 @@ export default function PathHub({
         <div>
           <span className="eyebrow">نقشهٔ راه تو · CEFR</span>
           <h1>دوره‌ها و درس‌ها</h1>
-          <p>سطح مناسب را باز کن. درس‌ها شماره‌گذاری محلی و مرتب‌اند.</p>
+          <p>درس‌ها به ترتیب باز می‌شوند؛ اول هر درس را تمام کن تا بعدی آزاد شود.</p>
         </div>
         <span className="level-pill">سطح فعلی: {userLevel}</span>
       </div>
 
       <div className="path-overview panel">
         <div>
-          <span>پیشرفت دوره</span>
+          <span>پیشرفت کل دوره</span>
           <strong>{progress}٪</strong>
         </div>
         <div className="mini-progress">
@@ -108,51 +117,76 @@ export default function PathHub({
         <div className="panel-heading">
           <div>
             <h3>درس‌های سطح‌بندی‌شده</h3>
-            <p>روی هر سطح بزن تا باز شود. سطح فعلی‌ات مشخص شده است.</p>
+            <p>هر سطح نوار پیشرفت خودش را دارد. درس قفل‌شده بعد از تکمیل درس قبلی باز می‌شود.</p>
           </div>
         </div>
 
         {LEVELS.map((level) => {
           const group = byLevel[level];
           const done = group.filter((l) => completedLessons.includes(l.id)).length;
+          const levelPct = group.length ? Math.round((done / group.length) * 100) : 0;
           const isOpen = openLevel === level;
           const isCurrent = level === userLevel;
 
           return (
-            <div key={level} className="path-level-group" style={{ marginBottom: 10 }}>
+            <div key={level} className="path-level-group" style={{ marginBottom: 14 }}>
               <button
                 type="button"
                 className="button button-ghost"
                 style={{
                   width: "100%",
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 12,
+                  flexDirection: "column",
+                  alignItems: "stretch",
+                  gap: 10,
                   padding: "14px 16px",
                   borderRadius: 14,
                   border: isCurrent ? "1px solid #cbbdff" : "1px solid #eeedf6",
                   background: isCurrent ? "#f7f4ff" : "#fbfbfe",
+                  textAlign: "right",
                 }}
                 onClick={() => setOpenLevel(isOpen ? null : level)}
                 aria-expanded={isOpen}
               >
-                <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4, textAlign: "right" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 700 }}>
-                    <span>{isOpen ? "▾" : "▸"}</span>
-                    سطح {level}
-                    {isCurrent && (
-                      <span className="level-pill" style={{ fontSize: 11 }}>
-                        سطح تو
-                      </span>
-                    )}
+                <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                  <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 700 }}>
+                      <span>{isOpen ? "▾" : "▸"}</span>
+                      سطح {level}
+                      {isCurrent && (
+                        <span className="level-pill" style={{ fontSize: 11 }}>
+                          سطح تو
+                        </span>
+                      )}
+                    </span>
+                    <span style={{ color: "#85859b", fontSize: 12, fontWeight: 400, paddingRight: 22 }}>
+                      {LEVEL_META[level]}
+                    </span>
                   </span>
-                  <span style={{ color: "#85859b", fontSize: 12, fontWeight: 400, paddingRight: 22 }}>
-                    {LEVEL_META[level]}
+                  <span style={{ color: "#85859b", fontSize: 13, whiteSpace: "nowrap" }}>
+                    {done}/{group.length} · {levelPct}٪
                   </span>
                 </span>
-                <span style={{ color: "#85859b", fontSize: 13, whiteSpace: "nowrap" }}>
-                  {done}/{group.length} درس
+                <span
+                  className="mini-progress"
+                  style={{
+                    display: "block",
+                    height: 8,
+                    borderRadius: 999,
+                    background: "#eeedf6",
+                    overflow: "hidden",
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "block",
+                      height: "100%",
+                      width: `${levelPct}%`,
+                      background: isCurrent ? "#7c5cbf" : "#a78bfa",
+                      borderRadius: 999,
+                      transition: "width 0.3s ease",
+                    }}
+                  />
                 </span>
               </button>
 
@@ -163,28 +197,41 @@ export default function PathHub({
                   )}
                   {group.map((lesson, lessonIndex) => {
                     const finished = completedLessons.includes(lesson.id);
+                    const unlocked = isLessonUnlocked(group, lessonIndex, completedLessons);
+                    const locked = !unlocked && !finished;
+
                     return (
                       <article
-                        className={`path-lesson panel ${finished ? "completed" : ""}`}
+                        className={`path-lesson panel ${finished ? "completed" : ""} ${locked ? "locked" : ""}`}
                         key={lesson.id}
+                        style={locked ? { opacity: 0.72 } : undefined}
                       >
                         <div className="path-step">
-                          {finished ? "✓" : String(lessonIndex + 1).padStart(2, "0")}
+                          {finished ? "✓" : locked ? "🔒" : String(lessonIndex + 1).padStart(2, "0")}
                         </div>
                         <div className="path-lesson-info">
                           <div className="path-meta">
                             <span>{lesson.level}</span>
                             <span>{lesson.minutes} دقیقه</span>
                             {finished && <span className="done-label">تکمیل‌شده</span>}
+                            {locked && <span className="done-label" style={{ background: "#f3f0ff", color: "#6e6e84" }}>قفل</span>}
                           </div>
                           <h3>{lesson.title}</h3>
-                          <p>{lesson.category} · آموزش، مثال و تمرین</p>
+                          <p>
+                            {locked
+                              ? "اول درس قبلی را تمام کن تا این درس باز شود."
+                              : `${lesson.category} · آموزش، مثال و تمرین`}
+                          </p>
                         </div>
                         <button
-                          className={finished ? "button button-ghost" : "button button-primary"}
-                          onClick={() => onStartLesson(lesson.id)}
+                          className={finished ? "button button-ghost" : locked ? "button button-ghost" : "button button-primary"}
+                          disabled={locked}
+                          onClick={() => {
+                            if (!locked) onStartLesson(lesson.id);
+                          }}
+                          title={locked ? "درس قبلی را تکمیل کن" : undefined}
                         >
-                          {finished ? "مرور درس" : "شروع درس"} ←
+                          {finished ? "مرور درس" : locked ? "قفل است" : "شروع درس"} {locked ? "" : "←"}
                         </button>
                       </article>
                     );
