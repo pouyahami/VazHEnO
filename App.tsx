@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import type { User } from "firebase/auth";
 import FirebaseAccount from "./FirebaseAccount";
 import "./App.css";
@@ -64,7 +64,9 @@ function loadSaved(): SavedState {
   }
 }
 
-const lessons: Lesson[] = [...(baseLessons as Lesson[]), ...(expandedLessons as Lesson[]), ...(extraLessons as Lesson[])];
+const lessons: Lesson[] = [...(baseLessons as Lesson[]), ...(expandedLessons as Lesson[]), ...(extraLessons as Lesson[])].filter(
+  (lesson): lesson is Lesson => !!lesson && !!lesson.id && !!lesson.level
+);
 
 function App() {
   const [page, setPage] = useState<Page>("home");
@@ -152,6 +154,60 @@ function App() {
                 <button className="button button-primary button-large" onClick={startLearning}>شروع یادگیری ←</button>
                 <button className="button button-ghost button-large" onClick={() => go("path")}>دیدن دوره‌ها</button>
               </div>
+              <div className="hero-meta" style={{ marginTop: 14, display: "flex", gap: 12, flexWrap: "wrap", color: "#6e6e84", fontSize: 13 }}>
+                <span>✓ شش سطح از A0 تا C1</span>
+                <span>· توضیح فارسی</span>
+                <span>· ذخیرهٔ پیشرفت</span>
+              </div>
+            </div>
+          </section>
+
+          <section className="section-container" style={{ marginTop: 8 }}>
+            <div className="panel" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12, padding: "18px 20px" }}>
+              <div style={{ textAlign: "center" }}><strong style={{ display: "block", fontSize: 22 }}>۶</strong><span style={{ color: "#6e6e84", fontSize: 13 }}>سطح · از A0 تا C1</span></div>
+              <div style={{ textAlign: "center" }}><strong style={{ display: "block", fontSize: 22 }}>{lessons.length}</strong><span style={{ color: "#6e6e84", fontSize: 13 }}>درس · آموزش مرحله‌ای</span></div>
+              <div style={{ textAlign: "center" }}><strong style={{ display: "block", fontSize: 22 }}>۴</strong><span style={{ color: "#6e6e84", fontSize: 13 }}>مهارت · خواندن، شنیدن، نوشتن، گفتن</span></div>
+              <div style={{ textAlign: "center" }}><strong style={{ display: "block", fontSize: 22 }}>مرور</strong><span style={{ color: "#6e6e84", fontSize: 13 }}>زمان‌بندی‌شده برای ماندگاری بیشتر</span></div>
+            </div>
+          </section>
+
+          <section className="section-container" style={{ marginTop: 28, marginBottom: 40 }}>
+            <div style={{ textAlign: "center", marginBottom: 18 }}>
+              <span className="eyebrow">روش واژه‌نو</span>
+              <h2 style={{ margin: "8px 0 6px" }}>فقط حفظ نکن؛ یاد بگیر و استفاده کنی.</h2>
+              <p style={{ color: "#6e6e84", margin: 0 }}>از یادگیری مفهوم تا استفادهٔ مستقل از آن پیش برو.</p>
+            </div>
+            <div className="content-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
+              <article className="panel" style={{ cursor: "pointer" }} onClick={() => go("path")}>
+                <span className="eyebrow">مسیر اصلی</span>
+                <h3 style={{ margin: "8px 0 6px" }}>درس‌های سطح‌بندی‌شده</h3>
+                <p style={{ margin: 0, color: "#6e6e84", fontSize: 14 }}>از A0 تا C1 با توضیح فارسی، مثال و تمرین.</p>
+              </article>
+              <article className="panel" style={{ cursor: "pointer" }} onClick={() => go("daily")}>
+                <span className="eyebrow">هر روز</span>
+                <h3 style={{ margin: "8px 0 6px" }}>تمرین روزانه</h3>
+                <p style={{ margin: 0, color: "#6e6e84", fontSize: 14 }}>چند دقیقه واژه و جمله برای حفظ پیوستگی.</p>
+              </article>
+              <article className="panel" style={{ cursor: "pointer" }} onClick={() => go("alphabet")}>
+                <span className="eyebrow">شروع از صفر</span>
+                <h3 style={{ margin: "8px 0 6px" }}>آموزش الفبا</h3>
+                <p style={{ margin: 0, color: "#6e6e84", fontSize: 14 }}>حروف انگلیسی قدم‌به‌قدم برای مبتدی مطلق.</p>
+              </article>
+              <article className="panel" style={{ cursor: "pointer" }} onClick={() => go("skills")}>
+                <span className="eyebrow">چهار مهارت</span>
+                <h3 style={{ margin: "8px 0 6px" }}>خواندن، شنیدن، گفتن، نوشتن</h3>
+                <p style={{ margin: 0, color: "#6e6e84", fontSize: 14 }}>تمرین مهارت‌ها جدا از مسیر درس‌ها.</p>
+              </article>
+              <article className="panel" style={{ cursor: "pointer" }} onClick={() => go("review")}>
+                <span className="eyebrow">ماندگاری</span>
+                <h3 style={{ margin: "8px 0 6px" }}>مرور هوشمند</h3>
+                <p style={{ margin: 0, color: "#6e6e84", fontSize: 14 }}>واژه‌ها را در زمان مناسب دوباره ببین.</p>
+              </article>
+              <article className="panel" style={{ cursor: "pointer" }} onClick={() => go("ielts")}>
+                <span className="eyebrow">آزمون</span>
+                <h3 style={{ margin: "8px 0 6px" }}>آمادگی IELTS</h3>
+                <p style={{ margin: 0, color: "#6e6e84", fontSize: 14 }}>کارگاه مهارت‌محور جدا از مسیر اصلی.</p>
+              </article>
             </div>
           </section>
         </main>
