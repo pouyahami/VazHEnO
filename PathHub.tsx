@@ -33,7 +33,12 @@ export default function PathHub({
   onOpenDaily,
   onOpenAlphabet,
 }: Props) {
-  const [openLevel, setOpenLevel] = useState<Level | null>(userLevel);
+  const safeLessons = useMemo(
+    () => (lessons || []).filter((lesson): lesson is Lesson => !!lesson && !!lesson.id && !!lesson.level),
+    [lessons],
+  );
+
+  const [openLevel, setOpenLevel] = useState<Level | null>(userLevel || "A0");
 
   const byLevel = useMemo(() => {
     const map: Record<Level, Lesson[]> = {
@@ -44,11 +49,11 @@ export default function PathHub({
       B2: [],
       C1: [],
     };
-    for (const lesson of lessons) {
+    for (const lesson of safeLessons) {
       if (map[lesson.level]) map[lesson.level].push(lesson);
     }
     return map;
-  }, [lessons]);
+  }, [safeLessons]);
 
   return (
     <div dir="rtl">
@@ -70,7 +75,7 @@ export default function PathHub({
           <span style={{ width: `${progress}%` }} />
         </div>
         <p>
-          {completedCount} درس از {lessons.length} درس تکمیل شده است.
+          {completedCount} درس از {safeLessons.length} درس تکمیل شده است.
         </p>
       </div>
 
