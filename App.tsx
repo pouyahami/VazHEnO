@@ -1,5 +1,4 @@
-
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
 import FirebaseAccount from "./FirebaseAccount";
 import "./App.css";
@@ -21,12 +20,15 @@ type Page =
   | "home" | "dashboard" | "placement" | "path" | "lesson"
   | "practice" | "review" | "skills" | "settings" | "assessment"
   | "listening" | "speaking" | "daily" | "alphabet" | "ielts";
+type FontScale = "normal" | "large" | "xlarge";
 
 type Lesson = {
   id: string; level: Level; title: string; category: string; minutes: number;
   explanation: string; example: string; translation: string; tip: string;
   question: string; options: string[]; answer: string; feedback: string;
   words: { word: string; meaning: string; example: string }[];
+  etymology?: string;
+  contextExamples?: { en: string; fa: string }[];
 };
 
 type SavedState = {
@@ -35,17 +37,32 @@ type SavedState = {
   currentLessonId: string; level: Level; placementHistory: string[][];
   placementResult: Level | null; lastStudyDate: string; studiedToday: number;
   skillProgress: Record<string, number>;
+  studyStreak: number; fontScale: FontScale;
 };
 
 const STORAGE_KEY = "vazheno-progress-v3";
 const LEVELS: Level[] = ["A0", "A1", "A2", "B1", "B2", "C1"];
+
+const LEVEL_META: Record<Level, { title: string; desc: string }> = {
+  A0: { title: "صفر مطلق", desc: "هیچ انگلیسی‌ای بلد نیستم؛ از الفبا و سلام شروع می‌کنم." },
+  A1: { title: "مبتدی", desc: "کلمه‌های ساده و معرفی خود را می‌فهمم." },
+  A2: { title: "مبتدی پلاس", desc: "دربارهٔ کار روزمره و خرید ساده حرف می‌زنم." },
+  B1: { title: "متوسط", desc: "دربارهٔ سفر، کار و علایق صحبت می‌کنم." },
+  B2: { title: "متوسط بالا", desc: "متن‌ها و بحث‌های عمومی را دنبال می‌کنم." },
+  C1: { title: "پیشرفته", desc: "متن و گفتار پیچیده را می‌فهمم و دقیق حرف می‌زنم." },
+};
 
 const emptyState: SavedState = {
   userName: "دوست زبان‌آموز", dailyGoal: "۱۵ دقیقه", completedLessons: [],
   reviewedWords: [], reviewDates: {}, currentLessonId: "a0-1", level: "A0",
   placementHistory: [], placementResult: null, lastStudyDate: "", studiedToday: 0,
   skillProgress: { reading: 0, listening: 0, speaking: 0, writing: 0 },
+  studyStreak: 0, fontScale: "normal",
 };
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
 
 function loadSaved(): SavedState {
   try {
@@ -58,10 +75,23 @@ function loadSaved(): SavedState {
       reviewedWords: Array.isArray(parsed.reviewedWords) ? parsed.reviewedWords : [],
       reviewDates: parsed.reviewDates ?? {},
       placementHistory: Array.isArray(parsed.placementHistory) ? parsed.placementHistory : [],
+      fontScale: parsed.fontScale === "large" || parsed.fontScale === "xlarge" ? parsed.fontScale : "normal",
+      studyStreak: typeof parsed.studyStreak === "number" ? parsed.studyStreak : 0,
     };
   } catch {
     return emptyState;
   }
+}
+
+function speakEnglish(text: string) {
+  try {
+    if (!text || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US";
+    u.rate = 0.9;
+    window.speechSynthesis.speak(u);
+  } catch {}
 }
 
 const lessons: Lesson[] = [...(baseLessons as Lesson[]), ...(expandedLessons as Lesson[]), ...(extraLessons as Lesson[])].filter(
@@ -74,10 +104,14 @@ function App() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [lessonIndex, setLessonIndex] = useState(0);
+  const [quizChoice, setQuizChoice] = useState<string | null>(null);
+  const [quizDone, setQuizDone] = useState(false);
 
   const go = (next: Page) => {
     setPage(next);
     setMobileMenu(false);
+    setQuizChoice(null);
+    setQuizDone(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -89,10 +123,19 @@ function App() {
     });
   }, []);
 
+  useEffect(() => {
+    const today = todayKey();
+    if (saved.lastStudyDate && saved.lastStudyDate !== today && saved.studiedToday > 0) {
+      // day rolled over — keep streak logic simple on next study
+    }
+  }, [saved.lastStudyDate, saved.studiedToday]);
+
   const startLesson = (id: string) => {
     const index = lessons.findIndex((lesson) => lesson.id === id);
     if (index < 0) return;
     setLessonIndex(index);
+    setQuizChoice(null);
+    setQuizDone(false);
     updateSaved({ currentLessonId: id });
     go("lesson");
   };
@@ -104,28 +147,66 @@ function App() {
     }
     const level = saved.placementResult ?? saved.level;
     const nextId =
-      saved.currentLessonId ||
       lessons.find((l) => l.level === level && !saved.completedLessons.includes(l.id))?.id ||
+      saved.currentLessonId ||
       lessons.find((l) => l.level === level)?.id ||
       lessons[0]?.id;
     if (nextId) startLesson(nextId);
     else go("dashboard");
   };
 
+  const completeLesson = (lesson: Lesson) => {
+    const today = todayKey();
+    let streak = saved.studyStreak || 0;
+    if (saved.lastStudyDate !== today) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yKey = yesterday.toISOString().slice(0, 10);
+      streak = saved.lastStudyDate === yKey ? streak + 1 : 1;
+    }
+    const completed = saved.completedLessons.includes(lesson.id)
+      ? saved.completedLessons
+      : [...saved.completedLessons, lesson.id];
+    updateSaved({
+      completedLessons: completed,
+      studiedToday: saved.lastStudyDate === today ? saved.studiedToday + (lesson.minutes || 8) : (lesson.minutes || 8),
+      lastStudyDate: today,
+      studyStreak: streak,
+      currentLessonId: lesson.id,
+    });
+  };
+
+  const goNextLesson = (lesson: Lesson) => {
+    completeLesson(lesson);
+    const sameLevel = lessons.filter((l) => l.level === lesson.level);
+    const idx = sameLevel.findIndex((l) => l.id === lesson.id);
+    const next = sameLevel[idx + 1] || lessons.find((l) => !saved.completedLessons.includes(l.id) && l.id !== lesson.id);
+    if (next) startLesson(next.id);
+    else go("path");
+  };
+
   const completedCount = saved.completedLessons.length;
   const progress = Math.round((completedCount / Math.max(1, lessons.length)) * 100);
   const currentLesson = lessons[lessonIndex] ?? lessons[0];
+  const userLevel = saved.placementResult ?? saved.level;
   const handleUserChange = (_u: User | null) => {};
 
+  const reviewCount = useMemo(() => {
+    const now = Date.now();
+    return Object.entries(saved.reviewDates || {}).filter(([, t]) => Number(t) <= now).length;
+  }, [saved.reviewDates]);
+
+  const shellClass = `app-shell ${darkMode ? "dark-mode" : ""} font-${saved.fontScale || "normal"}`;
+
   return (
-    <div className={`app-shell ${darkMode ? "dark-mode" : ""}`} dir="rtl" lang="fa">
+    <div className={shellClass} dir="rtl" lang="fa">
       <header className="topbar">
         <div className="topbar-inner">
           <button className="brand" onClick={() => go("home")}>
             <span className="brand-mark">و</span>
             <span className="brand-name">واژه‌نو</span>
           </button>
-          <button className="mobile-menu-button" onClick={() => setMobileMenu(!mobileMenu)}>☰</button>
+          <button className="mobile-menu-button" onClick={() => setMobileMenu(!mobileMenu)} aria-label="منو">☰</button>
           <nav className={`top-links ${mobileMenu ? "is-open" : ""}`}>
             <button onClick={startLearning}>شروع یادگیری</button>
             <button onClick={() => go("path")}>دوره‌ها</button>
@@ -134,7 +215,7 @@ function App() {
             <button onClick={() => go("skills")}>مهارت‌ها</button>
           </nav>
           <div className="top-actions">
-            <button className="button button-ghost small-button theme-toggle" onClick={() => setDarkMode((d) => !d)}>
+            <button className="button button-ghost small-button theme-toggle" onClick={() => setDarkMode((d) => !d)} aria-label="تغییر تم">
               <span>{darkMode ? "☀️" : "🌙"}</span>
             </button>
             <button className="button button-primary small-button" onClick={startLearning}>شروع یادگیری</button>
@@ -149,49 +230,67 @@ function App() {
             <div className="hero-copy">
               <span className="eyebrow"><span className="eyebrow-dot" /> یادگیری اصولی، قدم‌به‌قدم</span>
               <h1>انگلیسی را<br /><span className="gradient-text">واقعاً یاد بگیر.</span></h1>
-              <p>از اولین جمله‌ها تا درک متن‌های پیشرفته؛ با آموزش فارسی، تمرین فعال و مسیر متناسب با سطح خودت.</p>
+              <p>از اولین جمله‌ها تا درک متن‌های پیشرفته؛ با آموزش فارسی، تمرین فعال و مسیر متناسب با سطح خودت — از مبتدی مطلق تا پیشرفته.</p>
               <div className="hero-actions">
-                <button className="button button-primary button-large" onClick={startLearning}>شروع یادگیری ←</button>
+                <button className="button button-primary button-large" onClick={startLearning}>
+                  {saved.placementResult ? "ادامه یادگیری ←" : "شروع یادگیری ←"}
+                </button>
                 <button className="button button-ghost button-large" onClick={() => go("path")}>دیدن دوره‌ها</button>
               </div>
               <div className="hero-meta" style={{ marginTop: 14, display: "flex", gap: 12, flexWrap: "wrap", color: "#6e6e84", fontSize: 13 }}>
-                <span>✓ شش سطح از A0 تا C1</span>
+                <span>✓ شش سطح CEFR از A0 تا C1</span>
                 <span>· توضیح فارسی</span>
-                <span>· ذخیرهٔ پیشرفت</span>
+                <span>· بدون ثبت‌نام اجباری</span>
               </div>
             </div>
           </section>
 
-          <section className="section-container" style={{ marginTop: 8 }}>
-            <div className="panel" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12, padding: "18px 20px" }}>
-              <div style={{ textAlign: "center" }}><strong style={{ display: "block", fontSize: 22 }}>۶</strong><span style={{ color: "#6e6e84", fontSize: 13 }}>سطح · از A0 تا C1</span></div>
-              <div style={{ textAlign: "center" }}><strong style={{ display: "block", fontSize: 22 }}>{lessons.length}</strong><span style={{ color: "#6e6e84", fontSize: 13 }}>درس · آموزش مرحله‌ای</span></div>
-              <div style={{ textAlign: "center" }}><strong style={{ display: "block", fontSize: 22 }}>۴</strong><span style={{ color: "#6e6e84", fontSize: 13 }}>مهارت · خواندن، شنیدن، نوشتن، گفتن</span></div>
-              <div style={{ textAlign: "center" }}><strong style={{ display: "block", fontSize: 22 }}>مرور</strong><span style={{ color: "#6e6e84", fontSize: 13 }}>زمان‌بندی‌شده برای ماندگاری بیشتر</span></div>
+          {saved.placementResult && (
+            <section className="section-container" style={{ marginTop: 8 }}>
+              <div className="panel today-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <div>
+                  <span className="eyebrow">امروز</span>
+                  <h2 style={{ margin: "6px 0" }}>هدف: {saved.dailyGoal}</h2>
+                  <p style={{ margin: 0, color: "#6e6e84" }}>
+                    سطح {userLevel} · {saved.studiedToday} دقیقه امروز
+                    {saved.studyStreak > 0 ? ` · ${saved.studyStreak} روز پی‌درپی` : ""}
+                  </p>
+                </div>
+                <button className="button button-primary" onClick={startLearning}>شروع تمرین امروز ←</button>
+              </div>
+            </section>
+          )}
+
+          <section className="section-container" style={{ marginTop: 16 }}>
+            <div className="panel stats-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12, padding: "18px 20px" }}>
+              <div style={{ textAlign: "center" }}><strong style={{ display: "block", fontSize: 22 }}>۶</strong><span style={{ color: "#6e6e84", fontSize: 13 }}>سطح · A0 تا C1</span></div>
+              <div style={{ textAlign: "center" }}><strong style={{ display: "block", fontSize: 22 }}>{lessons.length}</strong><span style={{ color: "#6e6e84", fontSize: 13 }}>درس · مرحله‌ای</span></div>
+              <div style={{ textAlign: "center" }}><strong style={{ display: "block", fontSize: 22 }}>۴</strong><span style={{ color: "#6e6e84", fontSize: 13 }}>مهارت اصلی</span></div>
+              <div style={{ textAlign: "center" }}><strong style={{ display: "block", fontSize: 22 }}>مرور</strong><span style={{ color: "#6e6e84", fontSize: 13 }}>برای ماندگاری</span></div>
             </div>
           </section>
 
           <section className="section-container" style={{ marginTop: 28, marginBottom: 40 }}>
             <div style={{ textAlign: "center", marginBottom: 18 }}>
               <span className="eyebrow">روش واژه‌نو</span>
-              <h2 style={{ margin: "8px 0 6px" }}>فقط حفظ نکن؛ یاد بگیر و استفاده کنی.</h2>
-              <p style={{ color: "#6e6e84", margin: 0 }}>از یادگیری مفهوم تا استفادهٔ مستقل از آن پیش برو.</p>
+              <h2 style={{ margin: "8px 0 6px" }}>فقط حفظ نکن؛ یاد بگیر و استفاده کن.</h2>
+              <p style={{ color: "#6e6e84", margin: 0 }}>مسیر روشن برای هر سطح — از صفر تا پیشرفته.</p>
             </div>
             <div className="content-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
               <article className="panel" style={{ cursor: "pointer" }} onClick={() => go("path")}>
-                <span className="eyebrow">مسیر اصلی</span>
+                <span className="eyebrow">مسیر اصلی · CEFR</span>
                 <h3 style={{ margin: "8px 0 6px" }}>درس‌های سطح‌بندی‌شده</h3>
                 <p style={{ margin: 0, color: "#6e6e84", fontSize: 14 }}>از A0 تا C1 با توضیح فارسی، مثال و تمرین.</p>
               </article>
               <article className="panel" style={{ cursor: "pointer" }} onClick={() => go("daily")}>
-                <span className="eyebrow">هر روز</span>
+                <span className="eyebrow">هر روز · ۵ دقیقه</span>
                 <h3 style={{ margin: "8px 0 6px" }}>تمرین روزانه</h3>
-                <p style={{ margin: 0, color: "#6e6e84", fontSize: 14 }}>چند دقیقه واژه و جمله برای حفظ پیوستگی.</p>
+                <p style={{ margin: 0, color: "#6e6e84", fontSize: 14 }}>واژه و جمله برای حفظ عادت یادگیری.</p>
               </article>
               <article className="panel" style={{ cursor: "pointer" }} onClick={() => go("alphabet")}>
-                <span className="eyebrow">شروع از صفر</span>
+                <span className="eyebrow">مبتدی مطلق</span>
                 <h3 style={{ margin: "8px 0 6px" }}>آموزش الفبا</h3>
-                <p style={{ margin: 0, color: "#6e6e84", fontSize: 14 }}>حروف انگلیسی قدم‌به‌قدم برای مبتدی مطلق.</p>
+                <p style={{ margin: 0, color: "#6e6e84", fontSize: 14 }}>حروف انگلیسی قدم‌به‌قدم با راهنمای فارسی.</p>
               </article>
               <article className="panel" style={{ cursor: "pointer" }} onClick={() => go("skills")}>
                 <span className="eyebrow">چهار مهارت</span>
@@ -204,7 +303,7 @@ function App() {
                 <p style={{ margin: 0, color: "#6e6e84", fontSize: 14 }}>واژه‌ها را در زمان مناسب دوباره ببین.</p>
               </article>
               <article className="panel" style={{ cursor: "pointer" }} onClick={() => go("ielts")}>
-                <span className="eyebrow">آزمون</span>
+                <span className="eyebrow">آزمون · پیشرفته</span>
                 <h3 style={{ margin: "8px 0 6px" }}>آمادگی IELTS</h3>
                 <p style={{ margin: 0, color: "#6e6e84", fontSize: 14 }}>کارگاه مهارت‌محور جدا از مسیر اصلی.</p>
               </article>
@@ -218,7 +317,7 @@ function App() {
           <aside className={`sidebar ${mobileMenu ? "is-open" : ""}`}>
             <div className="sidebar-user">
               <div className="avatar">{(saved.userName || "و").slice(0, 1)}</div>
-              <div><strong>{saved.userName}</strong><span>سطح {saved.placementResult ?? saved.level}</span></div>
+              <div><strong>{saved.userName}</strong><span>سطح {userLevel}</span></div>
             </div>
             <button className="button button-primary" style={{ width: "100%", marginBottom: 12 }} onClick={startLearning}>ادامه یادگیری ←</button>
             {([
@@ -240,7 +339,7 @@ function App() {
               <PathHub
                 lessons={lessons}
                 completedLessons={saved.completedLessons}
-                userLevel={saved.placementResult ?? saved.level}
+                userLevel={userLevel}
                 progress={progress}
                 completedCount={completedCount}
                 onStartLesson={startLesson}
@@ -255,14 +354,14 @@ function App() {
                   <div><span className="eyebrow">تمرین کوتاه</span><h1>تمرین روزانه</h1></div>
                   <button className="button button-ghost" onClick={() => go("path")}>← بازگشت</button>
                 </div>
-                <DailyLearning lessons={lessons as any} level={saved.placementResult ?? saved.level} completedLessonIds={saved.completedLessons} onOpenLesson={startLesson} />
+                <DailyLearning lessons={lessons as any} level={userLevel} completedLessonIds={saved.completedLessons} onOpenLesson={startLesson} />
               </>
             )}
 
             {page === "alphabet" && (
               <>
                 <div className="page-heading">
-                  <div><span className="eyebrow">مبتدی</span><h1>آموزش الفبا</h1></div>
+                  <div><span className="eyebrow">مبتدی مطلق</span><h1>آموزش الفبا</h1></div>
                   <button className="button button-ghost" onClick={() => go("path")}>← بازگشت</button>
                 </div>
                 <AlphabetCourse />
@@ -285,19 +384,34 @@ function App() {
                   <div><span className="eyebrow">فضای شخصی</span><h1>خوش برگشتی، {saved.userName}</h1></div>
                   <button className="button button-primary" onClick={startLearning}>ادامه یادگیری ←</button>
                 </div>
+                <div className="panel today-card" style={{ marginBottom: 16 }}>
+                  <span className="eyebrow">هدف امروز</span>
+                  <h2 style={{ margin: "8px 0 4px" }}>{saved.dailyGoal}</h2>
+                  <p style={{ margin: 0, color: "#6e6e84" }}>
+                    {saved.studiedToday} دقیقه امروز
+                    {saved.studyStreak > 0 ? ` · رشتهٔ ${saved.studyStreak} روزه` : ""}
+                    {reviewCount > 0 ? ` · ${reviewCount} مورد برای مرور` : ""}
+                  </p>
+                  <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button className="button button-primary" onClick={startLearning}>درس بعدی ←</button>
+                    <button className="button button-ghost" onClick={() => go("review")}>مرور واژه‌ها</button>
+                  </div>
+                </div>
                 <div className="metric-grid">
-                  <div className="metric-card"><span>پیشرفت</span><strong>{progress}%</strong></div>
-                  <div className="metric-card"><span>درس‌های تکمیل‌شده</span><strong>{completedCount}</strong></div>
+                  <div className="metric-card"><span>پیشرفت دوره</span><strong>{progress}%</strong></div>
+                  <div className="metric-card"><span>درس تکمیل‌شده</span><strong>{completedCount}</strong></div>
+                  <div className="metric-card"><span>سطح فعلی</span><strong>{userLevel}</strong></div>
+                  <div className="metric-card"><span>رشته مطالعه</span><strong>{saved.studyStreak || 0} روز</strong></div>
                 </div>
                 <AchievementBadges
                   completedLessons={completedCount}
                   totalLessons={lessons.length}
                   studiedToday={saved.studiedToday}
-                  level={saved.placementResult ?? saved.level}
+                  level={userLevel}
                   reviewedWords={saved.reviewedWords.length}
                   skillProgress={saved.skillProgress}
                   totalMinutes={saved.studiedToday}
-                  studyStreak={0}
+                  studyStreak={saved.studyStreak || 0}
                 />
               </>
             )}
@@ -308,12 +422,12 @@ function App() {
                 <div className="panel" style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                   <div>
                     <strong>آمادگی IELTS</strong>
-                    <p style={{ margin: "4px 0 0", color: "#6e6e84", fontSize: 13 }}>جدا از مسیر اصلی دوره‌ها</p>
+                    <p style={{ margin: "4px 0 0", color: "#6e6e84", fontSize: 13 }}>جدا از مسیر اصلی دوره‌ها — مناسب سطح متوسط به بالا</p>
                   </div>
                   <button className="button button-ghost" onClick={() => go("ielts")}>ورود به IELTS ←</button>
                 </div>
                 <div className="skill-cards-grid">
-                  <article className="panel skill-card"><h3>خواندن</h3><button className="button button-primary" onClick={() => go("lesson")}>تمرین</button></article>
+                  <article className="panel skill-card"><h3>خواندن</h3><button className="button button-primary" onClick={() => go("path")}>تمرین</button></article>
                   <article className="panel skill-card"><h3>شنیدن</h3><button className="button button-primary" onClick={() => go("listening")}>تمرین</button></article>
                   <article className="panel skill-card"><h3>صحبت</h3><button className="button button-primary" onClick={() => go("speaking")}>تمرین</button></article>
                   <article className="panel skill-card"><h3>نوشتن</h3><button className="button button-primary" onClick={() => go("practice")}>تمرین</button></article>
@@ -329,30 +443,114 @@ function App() {
               <div className="lesson-wrap">
                 <div className="page-heading">
                   <div>
-                    <span className="eyebrow">{currentLesson.level} · {currentLesson.category}</span>
+                    <span className="eyebrow">سطح {currentLesson.level} · {currentLesson.category} · {currentLesson.minutes || 8} دقیقه</span>
                     <h1>{currentLesson.title}</h1>
                   </div>
                   <button className="button button-ghost" onClick={() => go("path")}>← دوره‌ها</button>
                 </div>
-                <div className="panel">
+
+                <div className="panel" style={{ marginBottom: 14 }}>
+                  <h2 style={{ marginTop: 0, fontSize: "1.05rem" }}>توضیح</h2>
                   <p>{currentLesson.explanation}</p>
-                  <blockquote dir="ltr">{currentLesson.example}</blockquote>
+
+                  <h2 style={{ fontSize: "1.05rem" }}>مثال</h2>
+                  <div className="lesson-example">{currentLesson.example}</div>
                   <p>{currentLesson.translation}</p>
-                  <p><strong>نکته:</strong> {currentLesson.tip}</p>
-                  <button
-                    className="button button-primary"
-                    onClick={() => {
-                      if (!saved.completedLessons.includes(currentLesson.id)) {
-                        updateSaved({
-                          completedLessons: [...saved.completedLessons, currentLesson.id],
-                          studiedToday: saved.studiedToday + (currentLesson.minutes || 10),
-                        });
-                      }
-                      go("path");
-                    }}
-                  >
-                    تکمیل درس ←
-                  </button>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+                    <button type="button" className="button button-ghost" onClick={() => speakEnglish(currentLesson.example)}>
+                      🔊 شنیدن تلفظ
+                    </button>
+                  </div>
+
+                  {currentLesson.tip && (
+                    <p><strong>نکته:</strong> {currentLesson.tip}</p>
+                  )}
+
+                  {Array.isArray(currentLesson.words) && currentLesson.words.length > 0 && (
+                    <>
+                      <h2 style={{ fontSize: "1.05rem" }}>واژه‌های این درس</h2>
+                      <div className="word-chip-row">
+                        {currentLesson.words.slice(0, 8).map((w) => (
+                          <button
+                            key={w.word}
+                            type="button"
+                            className="word-chip"
+                            onClick={() => speakEnglish(w.word)}
+                            title={w.meaning}
+                          >
+                            {w.word} — {w.meaning}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {currentLesson.question && Array.isArray(currentLesson.options) && currentLesson.options.length > 0 && (
+                    <div style={{ marginTop: 18 }}>
+                      <h2 style={{ fontSize: "1.05rem" }}>تمرین سریع</h2>
+                      <p>{currentLesson.question}</p>
+                      {currentLesson.options.map((opt) => {
+                        let cls = "quiz-option";
+                        if (quizDone || quizChoice) {
+                          if (opt === currentLesson.answer) cls += " is-correct";
+                          else if (opt === quizChoice) cls += " is-wrong";
+                        }
+                        return (
+                          <button
+                            key={opt}
+                            type="button"
+                            className={cls}
+                            disabled={!!quizChoice}
+                            onClick={() => {
+                              setQuizChoice(opt);
+                              setQuizDone(true);
+                            }}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                      {quizDone && (
+                        <p style={{ marginTop: 10 }}>
+                          {quizChoice === currentLesson.answer ? "آفرین، درست بود." : "مرور کن و دوباره در درس‌های بعد ببین."}
+                          {currentLesson.feedback ? ` ${currentLesson.feedback}` : ""}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {(currentLesson.level === "B2" || currentLesson.level === "C1" || currentLesson.etymology) && (
+                    <div className="advanced-box">
+                      <strong>برای سطح بالاتر</strong>
+                      <p style={{ margin: "8px 0 0" }}>
+                        {currentLesson.etymology ||
+                          `این ساختار را در بافت واقعی به کار ببر: «${currentLesson.example}» — به جای حفظ طوطی‌وار، یک جملهٔ شخصی با همین الگو بساز.`}
+                      </p>
+                      {Array.isArray(currentLesson.contextExamples) && currentLesson.contextExamples.map((c, i) => (
+                        <p key={i} style={{ marginTop: 8 }}>
+                          <span dir="ltr">{c.en}</span> — {c.fa}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: 20, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    <button
+                      className="button button-primary"
+                      onClick={() => goNextLesson(currentLesson)}
+                    >
+                      تکمیل و درس بعدی ←
+                    </button>
+                    <button
+                      className="button button-ghost"
+                      onClick={() => {
+                        completeLesson(currentLesson);
+                        go("path");
+                      }}
+                    >
+                      فقط تکمیل درس
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -367,10 +565,45 @@ function App() {
             {page === "settings" && (
               <>
                 <div className="page-heading"><div><span className="eyebrow">تنظیمات</span><h1>تنظیمات</h1></div></div>
-                <div className="panel">
-                  <label>نام نمایشی
+                <div className="panel" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    نام نمایشی
                     <input value={saved.userName} onChange={(e) => updateSaved({ userName: e.target.value })} />
                   </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    هدف روزانه
+                    <select
+                      value={saved.dailyGoal}
+                      onChange={(e) => updateSaved({ dailyGoal: e.target.value })}
+                    >
+                      <option>۵ دقیقه</option>
+                      <option>۱۰ دقیقه</option>
+                      <option>۱۵ دقیقه</option>
+                      <option>۲۰ دقیقه</option>
+                      <option>۳۰ دقیقه</option>
+                    </select>
+                  </label>
+                  <div>
+                    <div style={{ marginBottom: 8 }}>اندازهٔ متن (مناسب مطالعهٔ طولانی و سنین بالاتر)</div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {(["normal", "large", "xlarge"] as FontScale[]).map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          className={saved.fontScale === s ? "button button-primary" : "button button-ghost"}
+                          onClick={() => updateSaved({ fontScale: s })}
+                        >
+                          {s === "normal" ? "عادی" : s === "large" ? "بزرگ" : "خیلی بزرگ"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ marginBottom: 8 }}>تم</div>
+                    <button type="button" className="button button-ghost" onClick={() => setDarkMode((d) => !d)}>
+                      {darkMode ? "حالت روشن" : "حالت تاریک"}
+                    </button>
+                  </div>
                 </div>
               </>
             )}
@@ -378,39 +611,55 @@ function App() {
             {page === "placement" && (
               <div className="quiz-wrap">
                 <div className="page-heading">
-                  <div><span className="eyebrow">تعیین سطح</span><h1>شروع با سطح مناسب</h1></div>
+                  <div>
+                    <span className="eyebrow">تعیین سطح · CEFR</span>
+                    <h1>از کجا شروع کنیم؟</h1>
+                  </div>
                   <button className="button button-ghost" onClick={() => go("home")}>← بازگشت</button>
                 </div>
                 <div className="panel">
-                  <p>سطح خودت را انتخاب کن:</p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  <p style={{ marginTop: 0 }}>
+                    سطح خودت را با توضیح فارسی انتخاب کن. اگر مطمئن نیستی، از <strong>A0</strong> یا <strong>A1</strong> شروع کن — بعداً می‌توانی عوض کنی.
+                  </p>
+                  <div className="level-choice">
                     {LEVELS.map((level) => (
                       <button
                         key={level}
-                        className="button button-primary"
+                        type="button"
+                        className="level-choice-btn"
                         onClick={() => {
+                          const first = lessons.find((l) => l.level === level);
                           updateSaved({
                             placementResult: level,
                             level,
-                            currentLessonId: lessons.find((l) => l.level === level)?.id ?? "a0-1",
+                            currentLessonId: first?.id ?? "a0-1",
                           });
-                          const id = lessons.find((l) => l.level === level)?.id;
-                          if (id) startLesson(id);
+                          if (first) startLesson(first.id);
                           else go("path");
                         }}
                       >
-                        سطح {level}
+                        <strong>{level} — {LEVEL_META[level].title}</strong>
+                        <span>{LEVEL_META[level].desc}</span>
                       </button>
                     ))}
                   </div>
+                  <p style={{ marginTop: 16, color: "#6e6e84", fontSize: 13 }}>
+                    هیچ زبانی بلد نیستی؟ اول <button type="button" className="text-button" onClick={() => go("alphabet")}>آموزش الفبا</button> را ببین.
+                  </p>
                 </div>
               </div>
             )}
 
             {page === "practice" && (
               <>
-                <div className="page-heading"><div><h1>جمله‌سازی</h1></div><button className="button button-ghost" onClick={() => go("skills")}>← بازگشت</button></div>
-                <div className="panel"><p>از درس‌ها برای تمرین جمله استفاده کن.</p><button className="button button-primary" onClick={() => go("path")}>رفتن به درس‌ها</button></div>
+                <div className="page-heading">
+                  <div><h1>جمله‌سازی</h1></div>
+                  <button className="button button-ghost" onClick={() => go("skills")}>← بازگشت</button>
+                </div>
+                <div className="panel">
+                  <p>از درس‌های مسیر برای ساختن جمله استفاده کن.</p>
+                  <button className="button button-primary" onClick={() => go("path")}>رفتن به درس‌ها</button>
+                </div>
               </>
             )}
           </section>
