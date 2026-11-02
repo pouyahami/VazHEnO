@@ -1,0 +1,97 @@
+/* واژه‌نو — polish for cleaner professional UX */
+
+/* Header: keep brand + primary actions clearer */
+.topbar-inner {
+  gap: 12px;
+}
+
+.top-links {
+  gap: 4px;
+}
+
+.top-links button {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: #5c5c72;
+}
+
+.top-links button:hover {
+  background: #f3f0ff;
+  color: #5b3cc4;
+}
+
+/* Soften secondary header items on desktop — reduce noise */
+@media (min-width: 960px) {
+  .top-links button:nth-child(3),
+  .top-links button:nth-child(4),
+  .top-links button:nth-child(5) {
+    display: none;
+  }
+}
+
+/* Hero: one clear primary action */
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.hero-actions .button-primary {
+  min-width: 200px;
+  box-shadow: 0 10px 28px rgba(91, 60, 196, 0.22);
+}
+
+/* Cards consistency */
+.panel {
+  border-radius: 18px;
+}
+
+.path-level-group {
+  margin-bottom: 12px;
+}
+
+.path-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.path-lesson {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+}
+
+/* Sidebar: less visual noise */
+.sidebar-count {
+  background: #efe9ff;
+  color: #5b3cc4;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+/* Mobile: tighter top actions */
+@media (max-width: 720px) {
+  .top-actions .theme-toggle span:last-child {
+    display: none;
+  }
+
+  .path-lesson {
+    grid-template-columns: auto 1fr;
+  }
+
+  .path-lesson .button {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Focus ring for accessibility */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #7c5cbf;
+  outline-offset: 2px;
+}
