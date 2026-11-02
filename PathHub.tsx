@@ -19,7 +19,6 @@ type Props = {
   onStartLesson: (id: string) => void;
   onOpenDaily: () => void;
   onOpenAlphabet: () => void;
-  onOpenIelts: () => void;
 };
 
 const LEVELS: Level[] = ["A0", "A1", "A2", "B1", "B2", "C1"];
@@ -33,7 +32,6 @@ export default function PathHub({
   onStartLesson,
   onOpenDaily,
   onOpenAlphabet,
-  onOpenIelts,
 }: Props) {
   const [openLevel, setOpenLevel] = useState<Level | null>(userLevel);
 
@@ -57,8 +55,8 @@ export default function PathHub({
       <div className="page-heading">
         <div>
           <span className="eyebrow">نقشهٔ راه تو</span>
-          <h1>مسیر یادگیری</h1>
-          <p>اول سطح خودت را باز کن؛ دوره‌های ویژه جدا هستند.</p>
+          <h1>دوره‌ها و درس‌ها</h1>
+          <p>سطح خودت را باز کن و درس بعدی را شروع کن.</p>
         </div>
         <span className="level-pill">سطح فعلی: {userLevel}</span>
       </div>
@@ -78,22 +76,17 @@ export default function PathHub({
 
       <div
         className="content-grid"
-        style={{ marginBottom: 20, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}
+        style={{ marginBottom: 20, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}
       >
         <button className="panel" type="button" onClick={onOpenDaily} style={{ textAlign: "right", cursor: "pointer" }}>
-          <span className="eyebrow">روزانه</span>
+          <span className="eyebrow">هر روز</span>
           <h3 style={{ margin: "8px 0 4px" }}>تمرین روزانه</h3>
-          <p style={{ margin: 0, color: "#6e6e84", fontSize: 13 }}>واژه، جمله و مرور کوتاه هر روز</p>
+          <p style={{ margin: 0, color: "#6e6e84", fontSize: 13 }}>واژه و جمله · چند دقیقه در روز</p>
         </button>
         <button className="panel" type="button" onClick={onOpenAlphabet} style={{ textAlign: "right", cursor: "pointer" }}>
-          <span className="eyebrow">مبتدی</span>
+          <span className="eyebrow">شروع از صفر</span>
           <h3 style={{ margin: "8px 0 4px" }}>آموزش الفبا</h3>
-          <p style={{ margin: 0, color: "#6e6e84", fontSize: 13 }}>حروف انگلیسی از صفر</p>
-        </button>
-        <button className="panel" type="button" onClick={onOpenIelts} style={{ textAlign: "right", cursor: "pointer" }}>
-          <span className="eyebrow">آزمون</span>
-          <h3 style={{ margin: "8px 0 4px" }}>دوره IELTS</h3>
-          <p style={{ margin: 0, color: "#6e6e84", fontSize: 13 }}>آمادگی مهارت‌های آیلتس</p>
+          <p style={{ margin: 0, color: "#6e6e84", fontSize: 13 }}>حروف انگلیسی قدم‌به‌قدم</p>
         </button>
       </div>
 
@@ -101,7 +94,7 @@ export default function PathHub({
         <div className="panel-heading">
           <div>
             <h3>درس‌های سطح‌بندی‌شده</h3>
-            <p>روی هر سطح بزن تا درس‌هایش باز شود. سطح فعلی‌ات پیش‌فرض باز است.</p>
+            <p>فقط یک سطح باز است. روی سطح بزن تا درس‌ها را ببینی.</p>
           </div>
         </div>
 
@@ -163,9 +156,7 @@ export default function PathHub({
                             {finished && <span className="done-label">تکمیل‌شده</span>}
                           </div>
                           <h3>{lesson.title}</h3>
-                          <p>
-                            {lesson.category} · آموزش، مثال و تمرین
-                          </p>
+                          <p>{lesson.category} · آموزش، مثال و تمرین</p>
                         </div>
                         <button
                           className={finished ? "button button-ghost" : "button button-primary"}
