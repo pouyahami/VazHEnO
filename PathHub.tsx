@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
 
 type Level = "A0" | "A1" | "A2" | "B1" | "B2" | "C1";
+type LevelFilter = Level | "all";
 
 type Lesson = {
   id: string;
-  level: Level;
-  title: string;
-  category: string;
-  minutes: number;
+  level?: string;
+  title?: string;
+  category?: string;
+  minutes?: number;
 };
 
 type Props = {
@@ -32,11 +33,18 @@ const LEVEL_META: Record<Level, string> = {
   C1: "پیشرفته · متن و گفتار پیچیده",
 };
 
-/** درس i وقتی باز است که همهٔ درس‌های قبلش در همان سطح تکمیل شده باشند (یا خودش تکمیل شده باشد). */
+function normalizeLevel(raw: unknown): Level | null {
+  if (typeof raw !== "string") return null;
+  const v = raw.trim().toUpperCase();
+  if ((LEVELS as string[]).includes(v)) return v as Level;
+  return null;
+}
+
 function isLessonUnlocked(group: Lesson[], index: number, completedLessons: string[]) {
   if (index <= 0) return true;
   for (let i = 0; i < index; i++) {
-    if (!completedLessons.includes(group[i].id)) return false;
+    const id = group[i]?.id;
+    if (!id || !completedLessons.includes(id)) return false;
   }
   return true;
 }
@@ -52,11 +60,16 @@ export default function PathHub({
   onOpenAlphabet,
 }: Props) {
   const safeLessons = useMemo(
-    () => (lessons || []).filter((lesson): lesson is Lesson => !!lesson && !!lesson.id && !!lesson.level),
+    () =>
+      (lessons || []).filter(
+        (lesson): lesson is Lesson & { id: string; level: string } =>
+          !!lesson && typeof lesson.id === "string" && !!lesson.id && !!normalizeLevel(lesson.level),
+      ),
     [lessons],
   );
 
   const [openLevel, setOpenLevel] = useState<Level | null>(userLevel || "A0");
+  const [levelFilter, setLevelFilter] = useState<LevelFilter>("all");
 
   const byLevel = useMemo(() => {
     const map: Record<Level, Lesson[]> = {
@@ -68,10 +81,13 @@ export default function PathHub({
       C1: [],
     };
     for (const lesson of safeLessons) {
-      if (map[lesson.level]) map[lesson.level].push(lesson);
+      const lv = normalizeLevel(lesson.level);
+      if (lv) map[lv].push(lesson);
     }
     return map;
   }, [safeLessons]);
+
+  const visibleLevels = levelFilter === "all" ? LEVELS : LEVELS.filter((l) => l === levelFilter);
 
   return (
     <div dir="rtl">
@@ -90,7 +106,7 @@ export default function PathHub({
           <strong>{progress}٪</strong>
         </div>
         <div className="mini-progress">
-          <span style={{ width: `${progress}%` }} />
+          <span style={{ width: `${Math.max(0, Math.min(100, progress || 0))}%` }} />
         </div>
         <p>
           {completedCount} درس از {safeLessons.length} درس تکمیل شده است.
@@ -117,13 +133,38 @@ export default function PathHub({
         <div className="panel-heading">
           <div>
             <h3>درس‌های سطح‌بندی‌شده</h3>
-            <p>هر سطح نوار پیشرفت خودش را دارد. درس قفل‌شده بعد از تکمیل درس قبلی باز می‌شود.</p>
+            <p>فیلتر سطح را انتخاب کن یا همه را ببین. درس قفل‌شده بعد از تکمیل قبلی باز می‌شود.</p>
           </div>
         </div>
 
-        {LEVELS.map((level) => {
-          const group = byLevel[level];
-          const done = group.filter((l) => completedLessons.includes(l.id)).length;
+        <div className="level-filter" role="group" aria-label="فیلتر سطح CEFR">
+          <button
+            type="button"
+            className={`level-filter-chip ${levelFilter === "all" ? "is-active" : ""}`}
+            onClick={() => setLevelFilter("all")}
+          >
+            همه
+          </button>
+          {LEVELS.map((level) => (
+            <button
+              key={level}
+              type="button"
+              className={`level-filter-chip ${levelFilter === level ? "is-active" : ""}`}
+              onClick={() => {
+                setLevelFilter(level);
+                setOpenLevel(level);
+              }}
+            >
+              <span className="cefr-tag" data-level={level}>
+                {level}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {visibleLevels.map((level) => {
+          const group = byLevel[level] || [];
+          const done = group.filter((l) => l.id && completedLessons.includes(l.id)).length;
           const levelPct = group.length ? Math.round((done / group.length) * 100) : 0;
           const isOpen = openLevel === level;
           const isCurrent = level === userLevel;
@@ -152,7 +193,9 @@ export default function PathHub({
                   <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
                     <span style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 700 }}>
                       <span>{isOpen ? "▾" : "▸"}</span>
-                      سطح {level}
+                      <span className="cefr-tag" data-level={level}>
+                        {level}
+                      </span>
                       {isCurrent && (
                         <span className="level-pill" style={{ fontSize: 11 }}>
                           سطح تو
@@ -196,9 +239,10 @@ export default function PathHub({
                     <p style={{ color: "#6e6e84", padding: "8px 4px" }}>هنوز درسی در این سطح ثبت نشده.</p>
                   )}
                   {group.map((lesson, lessonIndex) => {
-                    const finished = completedLessons.includes(lesson.id);
+                    const finished = !!(lesson.id && completedLessons.includes(lesson.id));
                     const unlocked = isLessonUnlocked(group, lessonIndex, completedLessons);
                     const locked = !unlocked && !finished;
+                    const lv = normalizeLevel(lesson.level) || level;
 
                     return (
                       <article
@@ -211,23 +255,31 @@ export default function PathHub({
                         </div>
                         <div className="path-lesson-info">
                           <div className="path-meta">
-                            <span>{lesson.level}</span>
-                            <span>{lesson.minutes} دقیقه</span>
+                            <span className="cefr-tag" data-level={lv}>
+                              {lv}
+                            </span>
+                            <span>{lesson.minutes || 8} دقیقه</span>
                             {finished && <span className="done-label">تکمیل‌شده</span>}
-                            {locked && <span className="done-label" style={{ background: "#f3f0ff", color: "#6e6e84" }}>قفل</span>}
+                            {locked && (
+                              <span className="done-label" style={{ background: "#f3f0ff", color: "#6e6e84" }}>
+                                قفل
+                              </span>
+                            )}
                           </div>
-                          <h3>{lesson.title}</h3>
+                          <h3>{lesson.title || "درس"}</h3>
                           <p>
                             {locked
                               ? "اول درس قبلی را تمام کن تا این درس باز شود."
-                              : `${lesson.category} · آموزش، مثال و تمرین`}
+                              : `${lesson.category || "عمومی"} · آموزش، مثال و تمرین`}
                           </p>
                         </div>
                         <button
-                          className={finished ? "button button-ghost" : locked ? "button button-ghost" : "button button-primary"}
+                          className={
+                            finished ? "button button-ghost" : locked ? "button button-ghost" : "button button-primary"
+                          }
                           disabled={locked}
                           onClick={() => {
-                            if (!locked) onStartLesson(lesson.id);
+                            if (!locked && lesson.id) onStartLesson(lesson.id);
                           }}
                           title={locked ? "درس قبلی را تکمیل کن" : undefined}
                         >
