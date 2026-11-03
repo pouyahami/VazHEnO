@@ -12,6 +12,7 @@ import SmartLearning from "./SmartLearning";
 import { expandedLessons } from "./ExpandedLessons";
 import { extraLessons } from "./ExtraLessons";
 import { baseLessons } from "./BaseLessons";
+import { curatedLessons } from "./CuratedLessons";
 import { spanishLessons } from "./SpanishLessons";
 import AchievementBadges from "./AchievementBadges";
 import PathHub from "./PathHub";
@@ -103,7 +104,7 @@ function packFor(lang: TargetLang): Lesson[] {
   return lang === "es" ? spanishPack : englishLessons;
 }
 
-const englishLessons: Lesson[] = [...(baseLessons as Lesson[]), ...(expandedLessons as Lesson[]), ...(extraLessons as Lesson[])].filter(
+const englishLessons: Lesson[] = [...(baseLessons as Lesson[]), ...(expandedLessons as Lesson[]), ...(extraLessons as Lesson[]), ...(curatedLessons as Lesson[])].filter(
   (lesson): lesson is Lesson => !!lesson && !!lesson.id && !!lesson.level,
 );
 const spanishPack: Lesson[] = (spanishLessons as Lesson[]).filter(
