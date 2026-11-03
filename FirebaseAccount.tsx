@@ -13,12 +13,20 @@ import { auth, firebaseEnabled, googleProvider } from "./firebase";
 type Props = {
   onUserChange: (user: User | null) => void;
   onAuthSuccess?: (info: { user: User; isNewUser: boolean }) => void;
+  /** هر بار که این عدد عوض شود، مودال با preferredMode باز می‌شود */
+  openSignal?: number;
+  preferredMode?: "login" | "register";
 };
 
-export default function FirebaseAccount({ onUserChange, onAuthSuccess }: Props) {
+export default function FirebaseAccount({
+  onUserChange,
+  onAuthSuccess,
+  openSignal = 0,
+  preferredMode = "register",
+}: Props) {
   const [user, setUser] = useState<User | null>(null);
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register">("register");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -39,6 +47,13 @@ export default function FirebaseAccount({ onUserChange, onAuthSuccess }: Props) 
       }
     });
   }, [onUserChange]);
+
+  useEffect(() => {
+    if (!openSignal || user) return;
+    setMode(preferredMode);
+    setMessage("");
+    setOpen(true);
+  }, [openSignal, preferredMode, user]);
 
   useEffect(() => {
     if (!open) return;
@@ -80,7 +95,7 @@ export default function FirebaseAccount({ onUserChange, onAuthSuccess }: Props) 
       };
       setMessage(
         messages[code] ??
-          "عملیات انجام نشد. تنظیمات Firebase و اتصال اینترنت را بررسی کن."
+          "عملیات انجام نشد. تنظیمات Firebase و اتصال اینترنت را بررسی کن.",
       );
     } finally {
       setBusy(false);
@@ -177,12 +192,12 @@ export default function FirebaseAccount({ onUserChange, onAuthSuccess }: Props) 
             <div className="auth-modal-header">
               <div className="auth-modal-brand">و</div>
               <h2 id="auth-modal-title">
-                {mode === "login" ? "ورود به واژه‌نو" : "ساخت حساب کاربری"}
+                {mode === "login" ? "ورود به واژه‌نو" : "ساخت حساب برای یادگیری"}
               </h2>
               <p>
                 {mode === "login"
-                  ? "برای ذخیره پیشرفت و ادامه یادگیری وارد شو."
-                  : "یک حساب بساز تا پیشرفتت ذخیره شود."}
+                  ? "پیشرفت فقط روی حسابت ذخیره می‌شود تا در هر دستگاه ادامه بدهی."
+                  : "ثبت‌نام لازم است تا درس‌ها و پیشرفتت روی حسابت بماند — نه فقط در همین مرورگر."}
               </p>
             </div>
 
@@ -195,7 +210,7 @@ export default function FirebaseAccount({ onUserChange, onAuthSuccess }: Props) 
                     const credential = await createUserWithEmailAndPassword(
                       auth,
                       email.trim(),
-                      password
+                      password,
                     );
                     if (name.trim()) {
                       await updateProfile(credential.user, {
@@ -207,7 +222,7 @@ export default function FirebaseAccount({ onUserChange, onAuthSuccess }: Props) 
                     const credential = await signInWithEmailAndPassword(
                       auth,
                       email.trim(),
-                      password
+                      password,
                     );
                     onAuthSuccess?.({ user: credential.user, isNewUser: false });
                   }
@@ -245,9 +260,7 @@ export default function FirebaseAccount({ onUserChange, onAuthSuccess }: Props) 
                 <input
                   aria-label="رمز عبور"
                   type="password"
-                  autoComplete={
-                    mode === "register" ? "new-password" : "current-password"
-                  }
+                  autoComplete={mode === "register" ? "new-password" : "current-password"}
                   minLength={6}
                   required
                   placeholder="حداقل ۶ کاراکتر"
@@ -262,16 +275,8 @@ export default function FirebaseAccount({ onUserChange, onAuthSuccess }: Props) 
                 </span>
               )}
 
-              <button
-                className="button button-primary auth-submit"
-                type="submit"
-                disabled={busy}
-              >
-                {busy
-                  ? "لطفاً صبر کن…"
-                  : mode === "register"
-                    ? "ثبت‌نام"
-                    : "ورود"}
+              <button className="button button-primary auth-submit" type="submit" disabled={busy}>
+                {busy ? "لطفاً صبر کن…" : mode === "register" ? "ثبت‌نام و شروع" : "ورود"}
               </button>
             </form>
 
@@ -287,8 +292,8 @@ export default function FirebaseAccount({ onUserChange, onAuthSuccess }: Props) 
                 void run(async () => {
                   const result = await signInWithPopup(auth, googleProvider);
                   const isNew =
-                    (result as { _tokenResponse?: { isNewUser?: boolean } })
-                      ._tokenResponse?.isNewUser === true;
+                    (result as { _tokenResponse?: { isNewUser?: boolean } })._tokenResponse
+                      ?.isNewUser === true;
                   onAuthSuccess?.({ user: result.user, isNewUser: isNew });
                 })
               }

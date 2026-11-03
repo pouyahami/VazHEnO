@@ -8,12 +8,12 @@ function safeNumber(n: unknown, fallback = 0) {
   return typeof n === "number" && Number.isFinite(n) ? n : fallback;
 }
 
-/** Merge local and cloud: prefer newer updatedAt; union completed lessons. */
+/** ادغام امن: اتحاد درس‌های تکمیل‌شده؛ زمان جدیدتر برندهٔ فیلدهای اسکالر */
 export function mergeProgress(local: SavedState, cloud: Partial<SavedState> | null): SavedState {
   if (!cloud) return { ...local, version: PROGRESS_VERSION, updatedAt: Date.now() };
   const localTs = safeNumber(local.updatedAt);
   const cloudTs = safeNumber(cloud.updatedAt);
-  const base = cloudTs > localTs ? { ...local, ...cloud } : { ...cloud, ...local };
+  const newer = cloudTs >= localTs ? { ...local, ...cloud } : { ...cloud, ...local };
   const completed = Array.from(
     new Set([
       ...(Array.isArray(local.completedLessons) ? local.completedLessons : []),
@@ -22,7 +22,7 @@ export function mergeProgress(local: SavedState, cloud: Partial<SavedState> | nu
   );
   return {
     ...local,
-    ...base,
+    ...newer,
     completedLessons: completed,
     reviewedWords: Array.from(
       new Set([
@@ -54,18 +54,31 @@ export async function saveCloudProgress(user: User, progress: SavedState): Promi
   if (!db || !user?.uid) return;
   try {
     const ref = doc(db, "users", user.uid);
-    const payload = {
-      progress: {
-        ...progress,
-        version: PROGRESS_VERSION,
+    await setDoc(
+      ref,
+      {
+        progress: {
+          ...progress,
+          version: PROGRESS_VERSION,
+          updatedAt: Date.now(),
+        },
+        email: user.email ?? null,
+        displayName: user.displayName ?? null,
         updatedAt: Date.now(),
       },
-      email: user.email ?? null,
-      displayName: user.displayName ?? null,
-      updatedAt: Date.now(),
-    };
-    await setDoc(ref, payload, { merge: true });
+      { merge: true },
+    );
   } catch (err) {
     console.warn("saveCloudProgress failed", err);
   }
+}
+
+/** فقط ترجیحات UI بدون پیشرفت یادگیری */
+export function uiPrefsOnly(state: SavedState): Partial<SavedState> {
+  return {
+    fontScale: state.fontScale,
+    targetLang: state.targetLang,
+    dailyGoal: state.dailyGoal,
+    userName: state.userName,
+  };
 }
