@@ -164,8 +164,7 @@ const QUESTIONS: Question[] = [
     ],
     answer: "I look forward to meeting you.",
     explanation: "در عبارت look forward to، فعل بعدی به شکل ing می‌آید.",
-  },,
-
+  },
   {
     id: "b2-1", level: "B2", skill: "گرامر",
     question: "کدام جمله وارونگی را پس از قید منفی درست به‌کار برده است؟",
