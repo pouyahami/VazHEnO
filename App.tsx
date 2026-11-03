@@ -119,7 +119,6 @@ function App() {
   const [darkMode, setDarkMode] = useState(() => {
     try { return localStorage.getItem("vazheno-dark") === "1"; } catch { return false; }
   });
-  const [searchQ, setSearchQ] = useState("");
   const [lessonIndex, setLessonIndex] = useState(0);
   const [quizChoice, setQuizChoice] = useState<string | null>(null);
   const [quizDone, setQuizDone] = useState(false);
@@ -337,7 +336,7 @@ function App() {
             <span className="brand-name">واژه‌نو</span>
           </button>
           <button className="mobile-menu-button" onClick={() => setMobileMenu(!mobileMenu)} aria-label="منو">☰</button>
-          <nav className={`top-links ${mobileMenu ? "is-open" : ""`}>
+          <nav className={`top-links ${mobileMenu ? "is-open" : ""}`}>
             {isLoggedIn ? (
               <>
                 <button onClick={startLearning}>شروع یادگیری</button>
@@ -427,7 +426,7 @@ function App() {
 
       {page !== "home" && page !== "choose-lang" && page !== "placement" && isLoggedIn && (
         <div id="main-content" className="workspace section-container">
-          <aside className={`sidebar ${mobileMenu ? "is-open" : ""`}>
+          <aside className={`sidebar ${mobileMenu ? "is-open" : ""}`}>
             <div className="sidebar-user">
               <div className="avatar">{(saved.userName || "و").slice(0, 1)}</div>
               <div><strong>{saved.userName}</strong><span>{langLabel} · {userLevel}</span></div>
