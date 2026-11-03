@@ -28,17 +28,19 @@ function normalize(text: string) {
 }
 
 export default function ImmersivePractice({ title, category, example, translation }: Props) {
-  const scene = useMemo(() => sceneFor(title, category), [title, category]);
+  const safeExample = example || "";
+  const safeTranslation = translation || "";
+  const scene = useMemo(() => sceneFor(title || "", category || ""), [title, category]);
   const words = useMemo(() => {
-    const list = example.trim().split(/\s+/);
+    const list = safeExample.trim().split(/\s+/).filter(Boolean);
     if (list.length < 2) return list;
     const rotated = [...list.slice(1), list[0]];
     return rotated.every((word, i) => word === list[i]) ? [...list].reverse() : rotated;
-  }, [example]);
+  }, [safeExample]);
   const choices = useMemo(() => {
-    const options = [translation, ...distractors.filter((item) => item !== translation).slice(0, 3)];
+    const options = [safeTranslation, ...distractors.filter((item) => item !== safeTranslation).slice(0, 3)].filter(Boolean);
     return options.sort((a, b) => a.localeCompare(b, "fa"));
-  }, [translation]);
+  }, [safeTranslation]);
   const [chosen, setChosen] = useState("");
   const [matched, setMatched] = useState(false);
   const [built, setBuilt] = useState<string[]>([]);
@@ -47,29 +49,40 @@ export default function ImmersivePractice({ title, category, example, translatio
   const [rate, setRate] = useState(0.82);
 
   const play = () => {
-    if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
-      setHint("مرورگر شما پخش گفتار را پشتیبانی نمی‌کند؛ متن انگلیسی را بخوان و با صدای بلند تکرار کن.");
-      return;
+    try {
+      if (!safeExample) {
+        setHint("متن انگلیسی این تمرین در دسترس نیست.");
+        return;
+      }
+      if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+        setHint("مرورگر شما پخش گفتار را پشتیبانی نمی‌کند؛ متن انگلیسی را بخوان و با صدای بلند تکرار کن.");
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(safeExample);
+      utterance.lang = "en-US";
+      utterance.rate = rate;
+      try {
+        const voices = window.speechSynthesis.getVoices() || [];
+        const voice = voices.find((item) => item.lang.toLowerCase().startsWith("en-us"))
+          || voices.find((item) => item.lang.toLowerCase().startsWith("en"));
+        if (voice) utterance.voice = voice;
+      } catch { /* voice list optional */ }
+      utterance.onend = () => setHint("حالا جمله را بدون نگاه کردن تکرار کن؛ بعد یک بار دیگر گوش بده.");
+      utterance.onerror = () => setHint("پخش صدا انجام نشد. می‌توانی جمله را بخوانی و تکرار کنی.");
+      window.speechSynthesis.speak(utterance);
+      setHint("گوش بده و سعی کن معنی را از موقعیت و جمله بفهمی.");
+    } catch {
+      setHint("پخش صدا ممکن نشد. متن را بخوان و تمرین را ادامه بده.");
     }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(example);
-    utterance.lang = "en-US";
-    utterance.rate = rate;
-    const voice = window.speechSynthesis.getVoices().find((item) => item.lang.toLowerCase().startsWith("en-us"))
-      || window.speechSynthesis.getVoices().find((item) => item.lang.toLowerCase().startsWith("en"));
-    if (voice) utterance.voice = voice;
-    utterance.onend = () => setHint("حالا جمله را بدون نگاه کردن تکرار کن؛ بعد یک بار دیگر گوش بده.");
-    utterance.onerror = () => setHint("پخش صدا انجام نشد. می‌توانی جمله را بخوانی و تکرار کنی.");
-    window.speechSynthesis.speak(utterance);
-    setHint("گوش بده و سعی کن معنی را از موقعیت و جمله بفهمی.");
   };
 
-  const addWord = (word: string, index: number) => {
+  const addWord = (word: string) => {
     if (buildChecked) return;
     setBuilt((current) => [...current, word]);
     setHint("");
   };
-  const builtCorrectly = normalize(built.join(" ")) === normalize(example);
+  const builtCorrectly = normalize(built.join(" ")) === normalize(safeExample);
   const reset = () => {
     setChosen(""); setMatched(false); setBuilt([]); setBuildChecked(false); setHint("");
   };
@@ -82,7 +95,7 @@ export default function ImmersivePractice({ title, category, example, translatio
     </div>
     <div className="immersive-scene">
       <div className="immersive-illustration" aria-hidden="true">{scene.emoji}</div>
-      <div><span>{scene.label}</span><h4>{title}</h4><p>مرحلهٔ ۱ از ۳ · به جمله گوش بده</p></div>
+      <div><span>{scene.label}</span><h4>{title || "تمرین"}</h4><p>مرحلهٔ ۱ از ۳ · به جمله گوش بده</p></div>
       <button className="button button-primary" onClick={play}>▶ گوش دادن</button>
       <label className="immersive-speed">سرعت <select value={rate} onChange={(event) => setRate(Number(event.target.value))}><option value={0.65}>خیلی آرام</option><option value={0.82}>آرام</option><option value={1}>عادی</option></select></label>
     </div>
@@ -90,18 +103,18 @@ export default function ImmersivePractice({ title, category, example, translatio
     <div className="immersive-stage">
       <span className="immersive-step">۰۱ · فهم از بافت</span>
       <h4>کدام معنی با جمله‌ای که شنیدی هماهنگ است؟</h4>
-      <div className="immersive-choices">{choices.map((option) => <button key={option} disabled={matched} className={matched && option === translation ? "is-correct" : matched && option === chosen ? "is-wrong" : chosen === option ? "is-selected" : ""} onClick={() => setChosen(option)}>{option}</button>)}</div>
+      <div className="immersive-choices">{choices.map((option) => <button key={option} disabled={matched} className={matched && option === safeTranslation ? "is-correct" : matched && option === chosen ? "is-wrong" : chosen === option ? "is-selected" : ""} onClick={() => setChosen(option)}>{option}</button>)}</div>
       <button className="button button-ghost" disabled={!chosen || matched} onClick={() => setMatched(true)}>بررسی معنی</button>
-      {matched && <p className={chosen === translation ? "immersive-result good" : "immersive-result"}>{chosen === translation ? "درست است! معنی را از جمله تشخیص دادی." : "این بار معنی درست را ببین و جملهٔ انگلیسی را دوباره گوش بده."} <strong>{translation}</strong></p>}
+      {matched && <p className={chosen === safeTranslation ? "immersive-result good" : "immersive-result"}>{chosen === safeTranslation ? "درست است! معنی را از جمله تشخیص دادی." : "این بار معنی درست را ببین و جملهٔ انگلیسی را دوباره گوش بده."} <strong>{safeTranslation}</strong></p>}
     </div>
     <div className="immersive-stage">
       <span className="immersive-step">۰۲ · ساختن فعال</span>
       <h4>کلمه‌ها را به ترتیب درست بچین</h4>
       <p className="immersive-muted">هر کلمه را انتخاب کن؛ برای حذف کلمه از جملهٔ ساخته‌شده روی آن بزن.</p>
       <div className="immersive-built" dir="ltr">{built.length ? built.map((word, index) => <button key={index} onClick={() => { if (!buildChecked) setBuilt((current) => current.filter((_, i) => i !== index)); }}>{word} ×</button>) : <span>جمله را اینجا بساز…</span>}</div>
-      <div className="immersive-word-bank" dir="ltr">{words.map((word, index) => <button key={index} disabled={buildChecked} onClick={() => addWord(word, index)}>{word}</button>)}</div>
+      <div className="immersive-word-bank" dir="ltr">{words.map((word, index) => <button key={index} disabled={buildChecked} onClick={() => addWord(word)}>{word}</button>)}</div>
       <div className="immersive-actions"><button className="button button-primary" disabled={!built.length || buildChecked} onClick={() => setBuildChecked(true)}>بررسی جمله</button><button className="button button-ghost" onClick={reset}>شروع دوباره</button></div>
-      {buildChecked && <p className={builtCorrectly ? "immersive-result good" : "immersive-result"}>{builtCorrectly ? "عالی! جمله را درست ساختی." : "ترتیب هنوز درست نیست. یک بار دیگر گوش بده و دوباره بساز."} <strong dir="ltr">{example}</strong></p>}
+      {buildChecked && <p className={builtCorrectly ? "immersive-result good" : "immersive-result"}>{builtCorrectly ? "عالی! جمله را درست ساختی." : "ترتیب هنوز درست نیست. یک بار دیگر گوش بده و دوباره بساز."} <strong dir="ltr">{safeExample}</strong></p>}
     </div>
     <div className="immersive-stage immersive-speak">
       <span className="immersive-step">۰۳ · خروجی گفتاری</span>
