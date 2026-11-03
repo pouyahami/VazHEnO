@@ -360,7 +360,12 @@ function App() {
     else go("dashboard");
   };
 
+  const canCompleteLesson = (lesson: Lesson) =>
+    !lesson.question || !lesson.options?.length || quizChoice === lesson.answer;
+
   const completeLesson = (lesson: Lesson) => {
+    // A lesson with a quiz cannot be marked complete until the correct answer is selected.
+    if (!canCompleteLesson(lesson)) return;
     const today = todayKey();
     let streak = saved.studyStreak || 0;
     if (saved.lastStudyDate !== today) {
@@ -385,6 +390,7 @@ function App() {
   };
 
   const goNextLesson = (lesson: Lesson) => {
+    if (!canCompleteLesson(lesson)) return;
     completeLesson(lesson);
     const sameLevel = lessons.filter((l) => l.level === lesson.level);
     const idx = sameLevel.findIndex((l) => l.id === lesson.id);
@@ -587,12 +593,19 @@ function App() {
                         }
                         return <button key={opt} type="button" className={cls} disabled={!!quizChoice} onClick={() => { setQuizChoice(opt); setQuizDone(true); }}>{opt}</button>;
                       })}
-                      {quizDone && <p style={{ marginTop: 10 }}>{quizChoice === currentLesson.answer ? "درست." : "بازبینی کن."} {currentLesson.feedback || ""}</p>}
+                      {quizDone && (
+                        <div style={{ marginTop: 10 }} role="status" aria-live="polite">
+                          <p>{quizChoice === currentLesson.answer ? "آفرین! پاسخ درست است؛ حالا می‌توانی درس را تکمیل کنی." : "پاسخ درست نیست. دوباره تلاش کن؛ تا پاسخ صحیح ندهی درس تکمیل نمی‌شود."} {currentLesson.feedback || ""}</p>
+                          {quizChoice !== currentLesson.answer && (
+                            <button type="button" className="button button-ghost" onClick={() => { setQuizChoice(null); setQuizDone(false); }}>تلاش دوباره</button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                   <div style={{ marginTop: 20, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <button className="button button-primary" onClick={() => goNextLesson(currentLesson)}>تکمیل و بعدی ←</button>
-                    <button className="button button-ghost" onClick={() => { completeLesson(currentLesson); go("path"); }}>فقط تکمیل</button>
+                    <button className="button button-primary" disabled={!canCompleteLesson(currentLesson)} onClick={() => goNextLesson(currentLesson)}>تکمیل و بعدی ←</button>
+                    <button className="button button-ghost" disabled={!canCompleteLesson(currentLesson)} onClick={() => { if (!canCompleteLesson(currentLesson)) return; completeLesson(currentLesson); go("path"); }}>فقط تکمیل</button>
                   </div>
                 </div>
               </div>
