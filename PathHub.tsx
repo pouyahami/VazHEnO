@@ -40,8 +40,20 @@ function normalizeLevel(raw: unknown): Level | null {
   return null;
 }
 
-function isLevelAvailable(level: Level, userLevel: Level) {
-  return LEVELS.indexOf(level) <= LEVELS.indexOf(userLevel);
+function isLevelAvailable(
+  level: Level,
+  userLevel: Level,
+  byLevel: Record<Level, Lesson[]>,
+  completedLessons: string[],
+) {
+  const targetIndex = LEVELS.indexOf(level);
+  const startIndex = LEVELS.indexOf(userLevel);
+  if (targetIndex <= startIndex) return true;
+  for (let index = startIndex; index < targetIndex; index++) {
+    const previousLevelLessons = byLevel[LEVELS[index]] || [];
+    if (previousLevelLessons.some((lesson) => !completedLessons.includes(lesson.id))) return false;
+  }
+  return true;
 }
 
 function isLessonUnlocked(group: Lesson[], index: number, completedLessons: string[]) {
@@ -172,7 +184,7 @@ export default function PathHub({
           const levelPct = group.length ? Math.round((done / group.length) * 100) : 0;
           const isOpen = openLevel === level;
           const isCurrent = level === userLevel;
-          const levelAvailable = isLevelAvailable(level, userLevel);
+          const levelAvailable = isLevelAvailable(level, userLevel, byLevel, completedLessons);
 
           return (
             <div key={level} className="path-level-group" style={{ marginBottom: 14 }}>
