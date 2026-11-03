@@ -38,13 +38,11 @@ export function mergeProgress(local: SavedState, cloud: Partial<SavedState> | nu
 
 export async function loadCloudProgress(user: User): Promise<Partial<SavedState> | null> {
   if (!db || !user?.uid) return null;
-  try {
-    const ref = doc(db, "users", user.uid);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return null;
-    const data = snap.data() as { progress?: Partial<SavedState> };
-    return data.progress ?? null;
-  }
+  const ref = doc(db, "users", user.uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  const data = snap.data() as { progress?: Partial<SavedState> };
+  return data.progress ?? null;
 }
 
 export async function saveCloudProgress(user: User, progress: SavedState): Promise<void> {
