@@ -29,6 +29,11 @@ export type Lesson = {
   lang?: TargetLang;
 };
 
+export type PlacementMap = {
+  en: Level | null;
+  es: Level | null;
+};
+
 export type SavedState = {
   userName: string;
   dailyGoal: string;
@@ -38,7 +43,12 @@ export type SavedState = {
   currentLessonId: string;
   level: Level;
   placementHistory: string[][];
+  /** سطح فعال زبان فعلی (همگام با placementByLang[targetLang]) */
   placementResult: Level | null;
+  /** تعیین سطح جدا برای هر زبان */
+  placementByLang: PlacementMap;
+  /** آیا کاربر حداقل یک‌بار زبان هدف را انتخاب کرده */
+  langChosen: boolean;
   lastStudyDate: string;
   studiedToday: number;
   skillProgress: Record<string, number>;
@@ -52,4 +62,4 @@ export type SavedState = {
 export const LEVELS: Level[] = ["A0", "A1", "A2", "B1", "B2", "C1"];
 
 export const STORAGE_KEY = "vazheno-progress-v3";
-export const PROGRESS_VERSION = 2;
+export const PROGRESS_VERSION = 3;
