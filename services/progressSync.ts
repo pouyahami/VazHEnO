@@ -44,9 +44,6 @@ export async function loadCloudProgress(user: User): Promise<Partial<SavedState>
     if (!snap.exists()) return null;
     const data = snap.data() as { progress?: Partial<SavedState> };
     return data.progress ?? null;
-  } catch (err) {
-    console.warn("loadCloudProgress failed", err);
-    return null;
   }
 }
 
