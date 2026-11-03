@@ -3,6 +3,7 @@ import type { User } from "firebase/auth";
 import FirebaseAccount from "./FirebaseAccount";
 import "./App.css";
 import StageAssessment from "./StageAssessment";
+import PlacementTest from "./PlacementTest";
 import ListeningPractice from "./ListeningPractice";
 import SpeakingPractice from "./SpeakingPractice";
 import DailyLearning from "./DailyLearning";
@@ -12,12 +13,14 @@ import SmartLearning from "./SmartLearning";
 import { expandedLessons } from "./ExpandedLessons";
 import { extraLessons } from "./ExtraLessons";
 import { baseLessons } from "./BaseLessons";
+import { curatedLessons } from "./CuratedLessons";
 import { spanishLessons } from "./SpanishLessons";
 import AchievementBadges from "./AchievementBadges";
 import PathHub from "./PathHub";
 import type { Level, Lesson, PlacementMap, SavedState, TargetLang } from "./types";
 import { LEVELS, STORAGE_KEY, PROGRESS_VERSION } from "./types";
 import { loadCloudProgress, mergeProgress, saveCloudProgress } from "./services/progressSync";
+import { firebaseEnabled } from "./firebase";
 
 type Page =
   | "home" | "choose-lang" | "dashboard" | "placement" | "path" | "lesson"
@@ -102,7 +105,7 @@ function packFor(lang: TargetLang): Lesson[] {
   return lang === "es" ? spanishPack : englishLessons;
 }
 
-const englishLessons: Lesson[] = [...(baseLessons as Lesson[]), ...(expandedLessons as Lesson[]), ...(extraLessons as Lesson[])].filter(
+const englishLessons: Lesson[] = [...(baseLessons as Lesson[]), ...(expandedLessons as Lesson[]), ...(extraLessons as Lesson[]), ...(curatedLessons as Lesson[])].filter(
   (lesson): lesson is Lesson => !!lesson && !!lesson.id && !!lesson.level,
 );
 const spanishPack: Lesson[] = (spanishLessons as Lesson[]).filter(
@@ -114,6 +117,7 @@ function App() {
   const [saved, setSaved] = useState<SavedState>(emptyState);
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [guestMode, setGuestMode] = useState(false);
   const [authSignal, setAuthSignal] = useState(0);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
@@ -123,12 +127,14 @@ function App() {
   const [quizChoice, setQuizChoice] = useState<string | null>(null);
   const [quizDone, setQuizDone] = useState(false);
   const cloudUserRef = useRef<User | null>(null);
+  const cloudReadyUidRef = useRef<string | null>(null);
   const saveTimer = useRef<number | null>(null);
+  const authLoadSequence = useRef(0);
 
   const targetLang: TargetLang = saved.targetLang === "es" ? "es" : "en";
   const lessons = useMemo(() => packFor(targetLang), [targetLang]);
   const langLabel = targetLang === "es" ? "اسپانیایی" : "انگلیسی";
-  const isLoggedIn = !!authUser;
+  const isLoggedIn = !!authUser || guestMode;
   const currentPlacement = saved.placementByLang?.[targetLang] ?? saved.placementResult;
 
   useEffect(() => {
@@ -149,44 +155,112 @@ function App() {
   }, []);
 
   const updateSaved = useCallback((patch: Partial<SavedState>) => {
+    // Capture the owner at edit time; never let a delayed save follow a later account switch.
+    const owner = cloudUserRef.current;
     setSaved((prev) => {
       const next = normalizeState({ ...prev, ...patch, updatedAt: Date.now() });
-      if (cloudUserRef.current) {
+      if (owner) {
         cacheLocal(next);
-        if (saveTimer.current) window.clearTimeout(saveTimer.current);
-        saveTimer.current = window.setTimeout(() => {
-          void saveCloudProgress(cloudUserRef.current!, next);
-        }, 500);
+        // Never write until this account's remote progress has been read successfully.
+        if (cloudReadyUidRef.current === owner.uid) {
+          if (saveTimer.current !== null) window.clearTimeout(saveTimer.current);
+          saveTimer.current = window.setTimeout(() => {
+            saveTimer.current = null;
+            if (
+              cloudUserRef.current?.uid !== owner.uid ||
+              cloudReadyUidRef.current !== owner.uid
+            ) return;
+            void saveCloudProgress(owner, next);
+          }, 500);
+        }
+      } else if (guestMode) {
+        // Guest progress is deliberately local to this browser/device.
+        cacheLocal(next);
       }
       return next;
     });
-  }, [cacheLocal]);
+  }, [cacheLocal, guestMode]);
+
+  const enterGuestMode = useCallback(() => {
+    let local: Partial<SavedState> | null = null;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      local = raw ? (JSON.parse(raw) as Partial<SavedState>) : null;
+    } catch {
+      local = null;
+    }
+    const next = normalizeState(local);
+    const placement = next.placementByLang?.[next.targetLang] ?? next.placementResult;
+    setGuestMode(true);
+    setSaved(next);
+    setMobileMenu(false);
+    if (!next.langChosen) setPage("choose-lang");
+    else if (!placement) setPage("placement");
+    else setPage("dashboard");
+  }, []);
 
   const requireAuth = useCallback((): boolean => {
-    if (cloudUserRef.current) return true;
+    if (cloudUserRef.current || guestMode) return true;
+    // Preview deployments may not receive production-only Firebase secrets.
+    // Keep the learning flow usable without pretending cloud registration succeeded.
+    if (!firebaseEnabled) {
+      enterGuestMode();
+      return false;
+    }
     setAuthSignal((n) => n + 1);
     return false;
-  }, []);
+  }, [enterGuestMode, guestMode]);
 
   useEffect(() => {
     if (!authReady) return;
-    if (!authUser && page !== "home") {
+    if (!authUser && !guestMode && page !== "home") {
       setPage("home");
       setMobileMenu(false);
     }
-  }, [authUser, authReady, page]);
+  }, [authUser, authReady, guestMode, page]);
 
   const handleUserChange = useCallback(async (user: User | null) => {
+    const sequence = ++authLoadSequence.current;
+    const previousUid = cloudUserRef.current?.uid ?? null;
+    if (saveTimer.current !== null) {
+      window.clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
     cloudUserRef.current = user;
+    cloudReadyUidRef.current = null;
+    setGuestMode(false);
     setAuthUser(user);
     setAuthReady(true);
+
     if (!user) {
       clearLocalProgress();
       setSaved(normalizeState(emptyState));
       setPage("home");
       return;
     }
-    const cloud = await loadCloudProgress(user);
+
+    // Do not briefly expose another account's cached progress while the new account loads.
+    if (previousUid !== user.uid) {
+      setSaved(normalizeState(emptyState));
+      setPage("home");
+    }
+
+    let cloud: Partial<SavedState> | null;
+    try {
+      cloud = await loadCloudProgress(user);
+    } catch (err) {
+      // A failed read is not the same as a new account. Never overwrite cloud data with defaults.
+      console.warn("Could not load cloud progress; leaving remote data untouched.", err);
+      if (sequence === authLoadSequence.current && cloudUserRef.current?.uid === user.uid) {
+        setSaved(normalizeState(emptyState));
+        setPage("home");
+      }
+      return;
+    }
+
+    // Ignore late responses from an account that is no longer active.
+    if (sequence !== authLoadSequence.current || cloudUserRef.current?.uid !== user.uid) return;
+
     const next = normalizeState({
       ...emptyState,
       ...(cloud || {}),
@@ -194,6 +268,7 @@ function App() {
     });
     setSaved(next);
     cacheLocal(next);
+    cloudReadyUidRef.current = user.uid;
     void saveCloudProgress(user, next);
     if (!next.langChosen) setPage("choose-lang");
     else if (!next.placementByLang[next.targetLang]) setPage("placement");
@@ -286,7 +361,12 @@ function App() {
     else go("dashboard");
   };
 
+  const canCompleteLesson = (lesson: Lesson) =>
+    Boolean(lesson.question?.trim() && lesson.options && lesson.options.length >= 2 && lesson.answer?.trim() && lesson.options.includes(lesson.answer) && quizChoice === lesson.answer);
+
   const completeLesson = (lesson: Lesson) => {
+    // A lesson with a quiz cannot be marked complete until the correct answer is selected.
+    if (!canCompleteLesson(lesson)) return;
     const today = todayKey();
     let streak = saved.studyStreak || 0;
     if (saved.lastStudyDate !== today) {
@@ -311,10 +391,13 @@ function App() {
   };
 
   const goNextLesson = (lesson: Lesson) => {
+    if (!canCompleteLesson(lesson)) return;
     completeLesson(lesson);
     const sameLevel = lessons.filter((l) => l.level === lesson.level);
     const idx = sameLevel.findIndex((l) => l.id === lesson.id);
-    const next = sameLevel[idx + 1] || lessons.find((l) => !saved.completedLessons.includes(l.id) && l.id !== lesson.id);
+    // Do not silently jump into another CEFR level: the path hub unlocks it
+    // only after every lesson in the current level has been completed.
+    const next = sameLevel[idx + 1];
     if (next) startLesson(next.id);
     else go("path");
   };
@@ -352,6 +435,7 @@ function App() {
           <div className="top-actions a11y-actions">
             <button type="button" className="button button-ghost small-button theme-toggle" onClick={() => setDarkMode((d) => !d)}>{darkMode ? "☀️" : "🌙"}</button>
             <button className="button button-primary small-button" onClick={startLearning}>{isLoggedIn ? "شروع یادگیری" : "ثبت‌نام"}</button>
+            {guestMode && <span role="status" style={{ fontSize: 12, color: "#6e6e84", whiteSpace: "nowrap" }}>حالت مهمان · ذخیره روی همین دستگاه</span>}
             <FirebaseAccount onUserChange={handleUserChange} openSignal={authSignal} preferredMode="register" />
           </div>
         </div>
@@ -369,8 +453,11 @@ function App() {
                   {!isLoggedIn ? "ثبت‌نام و شروع ←" : !saved.langChosen ? "انتخاب زبان ←" : !currentPlacement ? "تعیین سطح ←" : "ادامه یادگیری ←"}
                 </button>
               </div>
-              {!isLoggedIn && (
-                <p style={{ marginTop: 12, color: "#6e6e84", fontSize: 14 }}>برای دیدن دوره‌ها و درس‌ها باید وارد حساب شوی.</p>
+              {!isLoggedIn && !firebaseEnabled && (
+                <p style={{ marginTop: 12, color: "#6e6e84", fontSize: 14 }}>در این پیش‌نمایش ورود ابری فعال نیست؛ با شروع می‌توانی بدون حساب ادامه بدهی و پیشرفتت روی همین دستگاه ذخیره می‌شود.</p>
+              )}
+              {!isLoggedIn && firebaseEnabled && (
+                <p style={{ marginTop: 12, color: "#6e6e84", fontSize: 14 }}>برای همگام‌سازی پیشرفت بین دستگاه‌ها حساب بساز یا وارد شو.</p>
               )}
             </div>
           </section>
@@ -404,23 +491,27 @@ function App() {
 
       {page === "placement" && isLoggedIn && (
         <main id="main-content" className="section-container" style={{ paddingTop: 24, paddingBottom: 48 }}>
-          <div className="panel" style={{ maxWidth: 560, margin: "0 auto" }}>
-            <span className="eyebrow">گام ۲ از ۲ · {langLabel}</span>
-            <h1 style={{ marginTop: 8 }}>تعیین سطح {langLabel}</h1>
-            <p>اگر هیچ چیز بلد نیستی <strong>A0</strong> را بزن.</p>
-            <div className="level-choice" style={{ marginTop: 16 }}>
-              {LEVELS.map((level) => {
-                const hasLessons = lessons.some((l) => l.level === level);
-                return (
-                  <button key={level} type="button" className="level-choice-btn" disabled={!hasLessons} style={level === "A0" ? { borderColor: "#7c5cff" } : undefined} onClick={() => applyPlacement(level)}>
-                    <strong>{level} — {LEVEL_META[level].title}</strong>
-                    <span>{hasLessons ? LEVEL_META[level].desc : "به‌زودی"}</span>
-                  </button>
-                );
-              })}
+          {targetLang === "en" ? (
+            <PlacementTest onComplete={applyPlacement} />
+          ) : (
+            <div className="panel" style={{ maxWidth: 560, margin: "0 auto" }}>
+              <span className="eyebrow">گام ۲ از ۲ · {langLabel}</span>
+              <h1 style={{ marginTop: 8 }}>تعیین سطح {langLabel}</h1>
+              <p>اگر هیچ چیز بلد نیستی <strong>A0</strong> را بزن.</p>
+              <div className="level-choice" style={{ marginTop: 16 }}>
+                {LEVELS.map((level) => {
+                  const hasLessons = lessons.some((l) => l.level === level);
+                  return (
+                    <button key={level} type="button" className="level-choice-btn" disabled={!hasLessons} style={level === "A0" ? { borderColor: "#7c5cff" } : undefined} onClick={() => applyPlacement(level)}>
+                      <strong>{level} — {LEVEL_META[level].title}</strong>
+                      <span>{hasLessons ? LEVEL_META[level].desc : "به‌زودی"}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <button type="button" className="button button-ghost" style={{ marginTop: 16 }} onClick={() => go("choose-lang")}>← تغییر زبان</button>
             </div>
-            <button type="button" className="button button-ghost" style={{ marginTop: 16 }} onClick={() => go("choose-lang")}>← تغییر زبان</button>
-          </div>
+          )}
         </main>
       )}
 
@@ -507,12 +598,19 @@ function App() {
                         }
                         return <button key={opt} type="button" className={cls} disabled={!!quizChoice} onClick={() => { setQuizChoice(opt); setQuizDone(true); }}>{opt}</button>;
                       })}
-                      {quizDone && <p style={{ marginTop: 10 }}>{quizChoice === currentLesson.answer ? "درست." : "بازبینی کن."} {currentLesson.feedback || ""}</p>}
+                      {quizDone && (
+                        <div style={{ marginTop: 10 }} role="status" aria-live="polite">
+                          <p>{quizChoice === currentLesson.answer ? "آفرین! پاسخ درست است؛ حالا می‌توانی درس را تکمیل کنی." : "پاسخ درست نیست. دوباره تلاش کن؛ تا پاسخ صحیح ندهی درس تکمیل نمی‌شود."} {currentLesson.feedback || ""}</p>
+                          {quizChoice !== currentLesson.answer && (
+                            <button type="button" className="button button-ghost" onClick={() => { setQuizChoice(null); setQuizDone(false); }}>تلاش دوباره</button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                   <div style={{ marginTop: 20, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <button className="button button-primary" onClick={() => goNextLesson(currentLesson)}>تکمیل و بعدی ←</button>
-                    <button className="button button-ghost" onClick={() => { completeLesson(currentLesson); go("path"); }}>فقط تکمیل</button>
+                    <button className="button button-primary" disabled={!canCompleteLesson(currentLesson)} onClick={() => goNextLesson(currentLesson)}>تکمیل و بعدی ←</button>
+                    <button className="button button-ghost" disabled={!canCompleteLesson(currentLesson)} onClick={() => { if (!canCompleteLesson(currentLesson)) return; completeLesson(currentLesson); go("path"); }}>فقط تکمیل</button>
                   </div>
                 </div>
               </div>

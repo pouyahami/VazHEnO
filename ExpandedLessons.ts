@@ -15,9 +15,16 @@ function lesson(
   const feedbackPart = parts[parts.length - 2];
   const answerPart = parts[parts.length - 3];
   const optionParts = parts.slice(0, -3);
-  const options = optionParts.flatMap((part) =>
-    Array.isArray(part) ? part as string[] : [part as string]
-  );
+  const options = optionParts.reduce<string[]>((result, part) => {
+    if (typeof part === "string") {
+      result.push(part);
+    } else if (Array.isArray(part)) {
+      for (const value of part as unknown[]) {
+        if (typeof value === "string") result.push(value);
+      }
+    }
+    return result;
+  }, []);
   const words = Array.isArray(wordsPart) ? wordsPart as Lesson["words"] : [];
   const answer = typeof answerPart === "string" ? answerPart : "";
   const feedback = typeof feedbackPart === "string" ? feedbackPart : "";

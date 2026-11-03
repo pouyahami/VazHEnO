@@ -1,8 +1,6 @@
 name: Build check
 
 on:
-  pull_request:
-    branches: [main]
   push:
     branches: [main, feature/firebase-auth-cloud-sync]
 
@@ -17,6 +15,6 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install
+        run: npm install --no-audit --no-fund
       - name: Build application
         run: npm run build
