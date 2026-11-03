@@ -34,7 +34,7 @@ export default function PlacementTest({ onComplete }: Props) {
     for (const level of LEVELS.slice(1)) {
       const group = ITEMS.filter((item) => item.level === level);
       const correct = group.filter((item) => answers[ITEMS.indexOf(item)] === item.answer).length;
-      if (correct >= 1) result = level;
+      if (correct === group.length) result = level;
       else break;
     }
     return result;
