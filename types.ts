@@ -1,5 +1,6 @@
 export type Level = "A0" | "A1" | "A2" | "B1" | "B2" | "C1";
 export type FontScale = "normal" | "large" | "xlarge";
+export type TargetLang = "en" | "es";
 
 export type LessonWord = {
   word: string;
@@ -25,6 +26,7 @@ export type Lesson = {
   etymology?: string;
   contextExamples?: { en: string; fa: string }[];
   objective?: string;
+  lang?: TargetLang;
 };
 
 export type SavedState = {
@@ -42,6 +44,7 @@ export type SavedState = {
   skillProgress: Record<string, number>;
   studyStreak: number;
   fontScale: FontScale;
+  targetLang: TargetLang;
   updatedAt?: number;
   version?: number;
 };
@@ -49,4 +52,4 @@ export type SavedState = {
 export const LEVELS: Level[] = ["A0", "A1", "A2", "B1", "B2", "C1"];
 
 export const STORAGE_KEY = "vazheno-progress-v3";
-export const PROGRESS_VERSION = 1;
+export const PROGRESS_VERSION = 2;
