@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
-const files = ["BaseLessons.ts", "ExpandedLessons.ts", "ExtraLessons.ts"];
+const files = ["BaseLessons.ts", "ExpandedLessons.ts", "ExtraLessons.ts", "CuratedLessons.ts"];
 let errors = 0;
 let warnings = 0;
 
@@ -26,7 +26,24 @@ for (const file of files) {
   }
   const text = fs.readFileSync(p, "utf8");
   if (file === "ExtraLessons.ts" && text.includes("buildLesson") && text.includes("variant")) {
-    warn("ExtraLessons.ts uses generative variants — many lessons may be near-duplicates");
+    warn("ExtraLessons.ts still contains generated variants; do not count them as independently authored lessons");
+  }
+
+  if (file === "CuratedLessons.ts") {
+    const authored = (text.match(/id:\s*"cur-[^"]+"/g) || []).length;
+    if (authored < 10) fail(`CuratedLessons.ts: expected at least 10 authored lessons, found ${authored}`);
+    const entries = text.split(/\n  },\n/);
+    for (const [index, entry] of entries.entries()) {
+      if (!entry.includes('id: "cur-')) continue;
+      for (const field of ["question:", "options:", "answer:", "feedback:", "words:"]) {
+        if (!entry.includes(field)) fail(`CuratedLessons.ts entry ${index + 1} missing ${field}`);
+      }
+      const options = entry.match(/options:\s*\[([\s\S]*?)\],\s*answer:\s*"([^"]+)"/);
+      if (!options || !options[1].includes(options[2])) {
+        fail(`CuratedLessons.ts entry ${index + 1}: answer must appear in options`);
+      }
+    }
+    console.log(`CuratedLessons.ts: ${authored} individually authored lessons checked`);
   }
   let m;
   const fileIds = [];
