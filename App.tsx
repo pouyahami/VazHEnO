@@ -18,6 +18,7 @@ import PathHub from "./PathHub";
 import type { Level, Lesson, PlacementMap, SavedState, TargetLang } from "./types";
 import { LEVELS, STORAGE_KEY, PROGRESS_VERSION } from "./types";
 import { loadCloudProgress, mergeProgress, saveCloudProgress } from "./services/progressSync";
+import { firebaseEnabled } from "./firebase";
 
 type Page =
   | "home" | "choose-lang" | "dashboard" | "placement" | "path" | "lesson"
@@ -114,6 +115,7 @@ function App() {
   const [saved, setSaved] = useState<SavedState>(emptyState);
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [guestMode, setGuestMode] = useState(false);
   const [authSignal, setAuthSignal] = useState(0);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
@@ -130,7 +132,7 @@ function App() {
   const targetLang: TargetLang = saved.targetLang === "es" ? "es" : "en";
   const lessons = useMemo(() => packFor(targetLang), [targetLang]);
   const langLabel = targetLang === "es" ? "اسپانیایی" : "انگلیسی";
-  const isLoggedIn = !!authUser;
+  const isLoggedIn = !!authUser || guestMode;
   const currentPlacement = saved.placementByLang?.[targetLang] ?? saved.placementResult;
 
   useEffect(() => {
@@ -169,24 +171,51 @@ function App() {
             void saveCloudProgress(owner, next);
           }, 500);
         }
+      } else if (guestMode) {
+        // Guest progress is deliberately local to this browser/device.
+        cacheLocal(next);
       }
       return next;
     });
-  }, [cacheLocal]);
+  }, [cacheLocal, guestMode]);
+
+  const enterGuestMode = useCallback(() => {
+    let local: Partial<SavedState> | null = null;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      local = raw ? (JSON.parse(raw) as Partial<SavedState>) : null;
+    } catch {
+      local = null;
+    }
+    const next = normalizeState(local);
+    const placement = next.placementByLang?.[next.targetLang] ?? next.placementResult;
+    setGuestMode(true);
+    setSaved(next);
+    setMobileMenu(false);
+    if (!next.langChosen) setPage("choose-lang");
+    else if (!placement) setPage("placement");
+    else setPage("dashboard");
+  }, []);
 
   const requireAuth = useCallback((): boolean => {
-    if (cloudUserRef.current) return true;
+    if (cloudUserRef.current || guestMode) return true;
+    // Preview deployments may not receive production-only Firebase secrets.
+    // Keep the learning flow usable without pretending cloud registration succeeded.
+    if (!firebaseEnabled) {
+      enterGuestMode();
+      return false;
+    }
     setAuthSignal((n) => n + 1);
     return false;
-  }, []);
+  }, [enterGuestMode, guestMode]);
 
   useEffect(() => {
     if (!authReady) return;
-    if (!authUser && page !== "home") {
+    if (!authUser && !guestMode && page !== "home") {
       setPage("home");
       setMobileMenu(false);
     }
-  }, [authUser, authReady, page]);
+  }, [authUser, authReady, guestMode, page]);
 
   const handleUserChange = useCallback(async (user: User | null) => {
     const sequence = ++authLoadSequence.current;
@@ -197,6 +226,7 @@ function App() {
     }
     cloudUserRef.current = user;
     cloudReadyUidRef.current = null;
+    setGuestMode(false);
     setAuthUser(user);
     setAuthReady(true);
 
@@ -395,6 +425,7 @@ function App() {
           <div className="top-actions a11y-actions">
             <button type="button" className="button button-ghost small-button theme-toggle" onClick={() => setDarkMode((d) => !d)}>{darkMode ? "☀️" : "🌙"}</button>
             <button className="button button-primary small-button" onClick={startLearning}>{isLoggedIn ? "شروع یادگیری" : "ثبت‌نام"}</button>
+            {guestMode && <span role="status" style={{ fontSize: 12, color: "#6e6e84", whiteSpace: "nowrap" }}>حالت مهمان · ذخیره روی همین دستگاه</span>}
             <FirebaseAccount onUserChange={handleUserChange} openSignal={authSignal} preferredMode="register" />
           </div>
         </div>
@@ -412,8 +443,11 @@ function App() {
                   {!isLoggedIn ? "ثبت‌نام و شروع ←" : !saved.langChosen ? "انتخاب زبان ←" : !currentPlacement ? "تعیین سطح ←" : "ادامه یادگیری ←"}
                 </button>
               </div>
-              {!isLoggedIn && (
-                <p style={{ marginTop: 12, color: "#6e6e84", fontSize: 14 }}>برای دیدن دوره‌ها و درس‌ها باید وارد حساب شوی.</p>
+              {!isLoggedIn && !firebaseEnabled && (
+                <p style={{ marginTop: 12, color: "#6e6e84", fontSize: 14 }}>در این پیش‌نمایش ورود ابری فعال نیست؛ با شروع می‌توانی بدون حساب ادامه بدهی و پیشرفتت روی همین دستگاه ذخیره می‌شود.</p>
+              )}
+              {!isLoggedIn && firebaseEnabled && (
+                <p style={{ marginTop: 12, color: "#6e6e84", fontSize: 14 }}>برای همگام‌سازی پیشرفت بین دستگاه‌ها حساب بساز یا وارد شو.</p>
               )}
             </div>
           </section>
