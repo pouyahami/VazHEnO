@@ -1,0 +1,102 @@
+/* Home minimal + sticky header + search */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid #eeedf6;
+}
+.app-shell.dark-mode .sticky-header {
+  background: rgba(22, 22, 32, 0.92);
+  border-bottom-color: #2e2e42;
+}
+
+.home-minimal .hero-copy p {
+  max-width: 36rem;
+}
+
+.home-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+.home-nav-card {
+  text-align: right;
+  cursor: pointer;
+  border: 1px solid #eeedf6;
+  padding: 16px;
+  min-height: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.home-nav-card strong { font-size: 1rem; }
+.home-nav-card span { color: #6e6e84; font-size: 13px; }
+.home-nav-card:hover { border-color: #cbbdff; background: #f7f4ff; }
+
+.search-panel { padding: 14px 16px; }
+.search-label { display: block; font-size: 13px; color: #6e6e84; margin-bottom: 8px; }
+.search-input {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 12px;
+  border: 1px solid #e0d7ff;
+  padding: 10px 14px;
+  font-size: 16px;
+  background: #fff;
+}
+.app-shell.dark-mode .search-input {
+  background: #1c1c28;
+  border-color: #4a4a66;
+  color: #f0f0f7;
+}
+.search-results {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.search-results button {
+  width: 100%;
+  text-align: right;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #eeedf6;
+  background: #fbfbfe;
+  cursor: pointer;
+}
+.search-results button:hover { border-color: #cbbdff; }
+
+.level-select-wrap { display: inline-flex; align-items: center; }
+.level-select {
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1px solid #e0d7ff;
+  padding: 4px 10px;
+  background: #f7f4ff;
+  color: #4c2fb0;
+  font-weight: 700;
+  font-size: 13px;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.home-continue {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
