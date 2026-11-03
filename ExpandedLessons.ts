@@ -16,7 +16,9 @@ function lesson(
   const answerPart = parts[parts.length - 3];
   const optionParts = parts.slice(0, -3);
   const options = optionParts.flatMap((part) =>
-    Array.isArray(part) ? part as string[] : [part as string]
+    Array.isArray(part)
+      ? part.filter((value): value is string => typeof value === "string")
+      : [part]
   );
   const words = Array.isArray(wordsPart) ? wordsPart as Lesson["words"] : [];
   const answer = typeof answerPart === "string" ? answerPart : "";
