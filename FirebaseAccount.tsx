@@ -116,7 +116,7 @@ export default function FirebaseAccount({
   if (!firebaseEnabled || !auth) {
     return (
       <div className="firebase-account" dir="rtl">
-        <span className="firebase-account-note">ورود ابری هنوز تنظیم نشده است.</span>
+        <span className="firebase-account-note" title="در این پیش‌نمایش، ثبت‌نام ابری فعال نیست؛ با دکمهٔ شروع می‌توانی به‌صورت مهمان ادامه بدهی.">ورود ابری در این نسخه فعال نیست.</span>
       </div>
     );
   }
