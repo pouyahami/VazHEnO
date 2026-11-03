@@ -388,7 +388,9 @@ function App() {
     completeLesson(lesson);
     const sameLevel = lessons.filter((l) => l.level === lesson.level);
     const idx = sameLevel.findIndex((l) => l.id === lesson.id);
-    const next = sameLevel[idx + 1] || lessons.find((l) => !saved.completedLessons.includes(l.id) && l.id !== lesson.id);
+    // Do not silently jump into another CEFR level: the path hub unlocks it
+    // only after every lesson in the current level has been completed.
+    const next = sameLevel[idx + 1];
     if (next) startLesson(next.id);
     else go("path");
   };
