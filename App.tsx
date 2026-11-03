@@ -361,7 +361,7 @@ function App() {
   };
 
   const canCompleteLesson = (lesson: Lesson) =>
-    !lesson.question || !lesson.options?.length || quizChoice === lesson.answer;
+    Boolean(lesson.question?.trim() && lesson.options && lesson.options.length >= 2 && lesson.answer?.trim() && lesson.options.includes(lesson.answer) && quizChoice === lesson.answer);
 
   const completeLesson = (lesson: Lesson) => {
     // A lesson with a quiz cannot be marked complete until the correct answer is selected.
