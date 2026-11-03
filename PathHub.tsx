@@ -40,6 +40,10 @@ function normalizeLevel(raw: unknown): Level | null {
   return null;
 }
 
+function isLevelAvailable(level: Level, userLevel: Level) {
+  return LEVELS.indexOf(level) <= LEVELS.indexOf(userLevel);
+}
+
 function isLessonUnlocked(group: Lesson[], index: number, completedLessons: string[]) {
   if (index <= 0) return true;
   for (let i = 0; i < index; i++) {
@@ -95,7 +99,7 @@ export default function PathHub({
         <div>
           <span className="eyebrow">نقشهٔ راه تو · CEFR</span>
           <h1>دوره‌ها و درس‌ها</h1>
-          <p>درس‌ها به ترتیب باز می‌شوند؛ اول هر درس را تمام کن تا بعدی آزاد شود.</p>
+          <p>از سطح تعیین‌شده‌ات شروع کن؛ سطح‌های بالاتر پس از تکمیل مسیر فعلی باز می‌شوند. برای مرور، سطح‌های قبلی همیشه در دسترس‌اند.</p>
         </div>
         <span className="level-pill">سطح فعلی: {userLevel}</span>
       </div>
@@ -168,6 +172,7 @@ export default function PathHub({
           const levelPct = group.length ? Math.round((done / group.length) * 100) : 0;
           const isOpen = openLevel === level;
           const isCurrent = level === userLevel;
+          const levelAvailable = isLevelAvailable(level, userLevel);
 
           return (
             <div key={level} className="path-level-group" style={{ marginBottom: 14 }}>
@@ -183,7 +188,8 @@ export default function PathHub({
                   padding: "14px 16px",
                   borderRadius: 14,
                   border: isCurrent ? "1px solid #cbbdff" : "1px solid #eeedf6",
-                  background: isCurrent ? "#f7f4ff" : "#fbfbfe",
+                  background: isCurrent ? "#f7f4ff" : levelAvailable ? "#fbfbfe" : "#f4f4f7",
+                  opacity: levelAvailable ? 1 : 0.78,
                   textAlign: "right",
                 }}
                 onClick={() => setOpenLevel(isOpen ? null : level)}
@@ -201,6 +207,7 @@ export default function PathHub({
                           سطح تو
                         </span>
                       )}
+                      {!levelAvailable && <span className="done-label">سطح بعدی · قفل</span>}
                     </span>
                     <span style={{ color: "#85859b", fontSize: 12, fontWeight: 400, paddingRight: 22 }}>
                       {LEVEL_META[level]}
@@ -241,7 +248,7 @@ export default function PathHub({
                   {group.map((lesson, lessonIndex) => {
                     const finished = !!(lesson.id && completedLessons.includes(lesson.id));
                     const unlocked = isLessonUnlocked(group, lessonIndex, completedLessons);
-                    const locked = !unlocked && !finished;
+                    const locked = !levelAvailable || (!unlocked && !finished);
                     const lv = normalizeLevel(lesson.level) || level;
 
                     return (
@@ -269,7 +276,7 @@ export default function PathHub({
                           <h3>{lesson.title || "درس"}</h3>
                           <p>
                             {locked
-                              ? "اول درس قبلی را تمام کن تا این درس باز شود."
+                              ? !levelAvailable ? "برای ورود به این سطح، مسیر سطح فعلی را کامل کن." : "اول درس قبلی را تمام کن تا این درس باز شود."
                               : `${lesson.category || "عمومی"} · آموزش، مثال و تمرین`}
                           </p>
                         </div>
@@ -281,7 +288,7 @@ export default function PathHub({
                           onClick={() => {
                             if (!locked && lesson.id) onStartLesson(lesson.id);
                           }}
-                          title={locked ? "درس قبلی را تکمیل کن" : undefined}
+                          title={locked ? !levelAvailable ? "ابتدا سطح فعلی را کامل کن" : "درس قبلی را تکمیل کن" : undefined}
                         >
                           {finished ? "مرور درس" : locked ? "قفل است" : "شروع درس"} {locked ? "" : "←"}
                         </button>
