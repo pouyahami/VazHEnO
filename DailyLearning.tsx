@@ -35,7 +35,7 @@ function clean(value: string) {
 
 export default function DailyLearning({ lessons, level, completedLessonIds, onOpenLesson }: Props) {
   const today = new Date().toLocaleDateString("en-CA");
-  const eligible = useMemo(() => {
+  const eligible = useMemo<LessonData[]>(() => {
     const atLevel = lessons.filter((lesson) => lesson.level === level);
     const learned = lessons.filter((lesson) => completedLessonIds.includes(lesson.id));
     const source = [...learned, ...atLevel, ...lessons.filter((lesson) => lesson.level !== level)];
@@ -43,10 +43,10 @@ export default function DailyLearning({ lessons, level, completedLessonIds, onOp
   }, [lessons, level, completedLessonIds]);
   const tasks = useMemo(() => {
     const seed = dailySeed(today, completedLessonIds.length, level);
-    const pool = shuffled(eligible, seed).slice(0, Math.min(12, eligible.length));
-    const sentencePool = [...new Set(pool.map((lesson) => lesson.example).filter(Boolean))];
-    const meanings = [...new Set(pool.map((lesson) => lesson.translation).filter(Boolean))];
-    const wordPool = pool.flatMap((lesson) => lesson.words || []).filter((word) => word.word && word.meaning);
+    const pool = shuffled<LessonData>(eligible, seed).slice(0, Math.min(12, eligible.length));
+    const sentencePool: string[] = [...new Set(pool.map((lesson) => lesson.example).filter(Boolean))];
+    const meanings: string[] = [...new Set(pool.map((lesson) => lesson.translation).filter(Boolean))];
+    const wordPool: LessonWord[] = pool.flatMap((lesson) => lesson.words || []).filter((word) => word.word && word.meaning);
     const selected: Task[] = [];
     const makeOptions = (correct: string, all: string[], taskSeed: number) =>
       shuffled([...new Set([correct, ...all.filter((item) => item !== correct)])], taskSeed).slice(0, 4);
