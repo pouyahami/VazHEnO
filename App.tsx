@@ -123,6 +123,7 @@ function App() {
   const [quizChoice, setQuizChoice] = useState<string | null>(null);
   const [quizDone, setQuizDone] = useState(false);
   const cloudUserRef = useRef<User | null>(null);
+  const cloudReadyUidRef = useRef<string | null>(null);
   const saveTimer = useRef<number | null>(null);
   const authLoadSequence = useRef(0);
 
@@ -156,12 +157,18 @@ function App() {
       const next = normalizeState({ ...prev, ...patch, updatedAt: Date.now() });
       if (owner) {
         cacheLocal(next);
-        if (saveTimer.current !== null) window.clearTimeout(saveTimer.current);
-        saveTimer.current = window.setTimeout(() => {
-          saveTimer.current = null;
-          if (cloudUserRef.current?.uid !== owner.uid) return;
-          void saveCloudProgress(owner, next);
-        }, 500);
+        // Never write until this account's remote progress has been read successfully.
+        if (cloudReadyUidRef.current === owner.uid) {
+          if (saveTimer.current !== null) window.clearTimeout(saveTimer.current);
+          saveTimer.current = window.setTimeout(() => {
+            saveTimer.current = null;
+            if (
+              cloudUserRef.current?.uid !== owner.uid ||
+              cloudReadyUidRef.current !== owner.uid
+            ) return;
+            void saveCloudProgress(owner, next);
+          }, 500);
+        }
       }
       return next;
     });
@@ -189,6 +196,7 @@ function App() {
       saveTimer.current = null;
     }
     cloudUserRef.current = user;
+    cloudReadyUidRef.current = null;
     setAuthUser(user);
     setAuthReady(true);
 
@@ -228,6 +236,7 @@ function App() {
     });
     setSaved(next);
     cacheLocal(next);
+    cloudReadyUidRef.current = user.uid;
     void saveCloudProgress(user, next);
     if (!next.langChosen) setPage("choose-lang");
     else if (!next.placementByLang[next.targetLang]) setPage("placement");
