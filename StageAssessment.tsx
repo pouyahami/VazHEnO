@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import "./StageAssessment.css";
 
-type Level = "A0" | "A1" | "A2" | "B1";
+type Level = "A0" | "A1" | "A2" | "B1" | "B2" | "C1";
 
 type Question = {
   id: string;
@@ -32,6 +32,8 @@ const LEVELS: { value: Level; label: string }[] = [
   { value: "A1", label: "مقدماتی" },
   { value: "A2", label: "پیش‌مقدماتی" },
   { value: "B1", label: "متوسط" },
+  { value: "B2", label: "متوسط بالا" },
+  { value: "C1", label: "پیشرفته" },
 ];
 
 const QUESTIONS: Question[] = [
@@ -162,6 +164,63 @@ const QUESTIONS: Question[] = [
     ],
     answer: "I look forward to meeting you.",
     explanation: "در عبارت look forward to، فعل بعدی به شکل ing می‌آید.",
+  },,
+
+  {
+    id: "b2-1", level: "B2", skill: "گرامر",
+    question: "کدام جمله وارونگی را پس از قید منفی درست به‌کار برده است؟",
+    options: ["Rarely I have seen such evidence.", "Rarely have I seen such evidence.", "Rarely did I saw such evidence.", "Rarely have seen I such evidence."],
+    answer: "Rarely have I seen such evidence.",
+    explanation: "با Rarely در ابتدای جمله، فعل کمکی پیش از فاعل می‌آید.",
+  },
+  {
+    id: "b2-2", level: "B2", skill: "واژگان",
+    question: "معنی دقیق‌تر عبارت to mitigate a risk چیست؟",
+    options: ["نادیده گرفتن خطر", "کاهش دادن شدت خطر", "ایجاد خطر تازه", "اثبات قطعی خطر"],
+    answer: "کاهش دادن شدت خطر",
+    explanation: "Mitigate یعنی شدت یا اثر منفی چیزی را کاهش دادن.",
+  },
+  {
+    id: "b2-3", level: "B2", skill: "کاربرد",
+    question: "برای بیان محتاطانه یک نتیجه پژوهشی کدام عبارت مناسب‌تر است؟",
+    options: ["This proves it in every case.", "The findings may suggest a link.", "There is absolutely no doubt.", "Everyone must accept this fact."],
+    answer: "The findings may suggest a link.",
+    explanation: "may suggest ادعا را متناسب با میزان قطعیت شواهد محدود می‌کند.",
+  },
+  {
+    id: "b2-4", level: "B2", skill: "گرامر",
+    question: "کدام گزینه ساختار درست recommend را نشان می‌دهد؟",
+    options: ["I recommend him to applies.", "I recommend that he apply.", "I recommend that he applies.", "I recommend he to apply."],
+    answer: "I recommend that he apply.",
+    explanation: "در ساختار رسمی recommend that، فعل پایه می‌آید؛ apply بدون s.",
+  },
+  {
+    id: "c1-1", level: "C1", skill: "گرامر",
+    question: "کدام جمله شرطی وارونه و رسمی را درست نشان می‌دهد؟",
+    options: ["Had I known, I would have acted differently.", "Have I known, I would act differently.", "Had I knew, I would have acted differently.", "If had I known, I acted differently."],
+    answer: "Had I known, I would have acted differently.",
+    explanation: "در شرطی نوع سوم می‌توان If را حذف و had را پیش از فاعل آورد.",
+  },
+  {
+    id: "c1-2", level: "C1", skill: "واژگان",
+    question: "در متن تحلیلی، a tenable position به چه معناست؟",
+    options: ["موضعی قابل دفاع", "موضعی کاملاً نامربوط", "تصمیمی موقت و تصادفی", "موضوعی غیرقابل اندازه‌گیری"],
+    answer: "موضعی قابل دفاع",
+    explanation: "Tenable یعنی موضع یا استدلالی که بتوان با دلیل از آن دفاع کرد.",
+  },
+  {
+    id: "c1-3", level: "C1", skill: "کاربرد",
+    question: "کدام عبارت برای مخالفت دیپلماتیک مناسب‌تر است؟",
+    options: ["Your conclusion is ridiculous.", "I would question whether the evidence supports that conclusion.", "Only a fool believes this.", "That is obviously nonsense."],
+    answer: "I would question whether the evidence supports that conclusion.",
+    explanation: "این عبارت به‌جای حمله به فرد، کفایت شواهد برای نتیجه را نقد می‌کند.",
+  },
+  {
+    id: "c1-4", level: "C1", skill: "گرامر",
+    question: "کدام گزینه از notwithstanding به‌درستی استفاده می‌کند؟",
+    options: ["Notwithstanding the delay, the project was completed.", "Notwithstanding of the delay, the project completed.", "Notwithstanding the project was delayed, but completed.", "Notwithstanding to the delay, completed project."],
+    answer: "Notwithstanding the delay, the project was completed.",
+    explanation: "Notwithstanding می‌تواند پیش از عبارت اسمی به معنی با وجودِ بیاید.",
   },
 ];
 
