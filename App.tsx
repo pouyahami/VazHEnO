@@ -124,6 +124,7 @@ function App() {
   const [quizDone, setQuizDone] = useState(false);
   const cloudUserRef = useRef<User | null>(null);
   const saveTimer = useRef<number | null>(null);
+  const authLoadSequence = useRef(0);
 
   const targetLang: TargetLang = saved.targetLang === "es" ? "es" : "en";
   const lessons = useMemo(() => packFor(targetLang), [targetLang]);
@@ -149,13 +150,17 @@ function App() {
   }, []);
 
   const updateSaved = useCallback((patch: Partial<SavedState>) => {
+    // Capture the owner at edit time; never let a delayed save follow a later account switch.
+    const owner = cloudUserRef.current;
     setSaved((prev) => {
       const next = normalizeState({ ...prev, ...patch, updatedAt: Date.now() });
-      if (cloudUserRef.current) {
+      if (owner) {
         cacheLocal(next);
-        if (saveTimer.current) window.clearTimeout(saveTimer.current);
+        if (saveTimer.current !== null) window.clearTimeout(saveTimer.current);
         saveTimer.current = window.setTimeout(() => {
-          void saveCloudProgress(cloudUserRef.current!, next);
+          saveTimer.current = null;
+          if (cloudUserRef.current?.uid !== owner.uid) return;
+          void saveCloudProgress(owner, next);
         }, 500);
       }
       return next;
@@ -177,16 +182,45 @@ function App() {
   }, [authUser, authReady, page]);
 
   const handleUserChange = useCallback(async (user: User | null) => {
+    const sequence = ++authLoadSequence.current;
+    const previousUid = cloudUserRef.current?.uid ?? null;
+    if (saveTimer.current !== null) {
+      window.clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
     cloudUserRef.current = user;
     setAuthUser(user);
     setAuthReady(true);
+
     if (!user) {
       clearLocalProgress();
       setSaved(normalizeState(emptyState));
       setPage("home");
       return;
     }
-    const cloud = await loadCloudProgress(user);
+
+    // Do not briefly expose another account's cached progress while the new account loads.
+    if (previousUid !== user.uid) {
+      setSaved(normalizeState(emptyState));
+      setPage("home");
+    }
+
+    let cloud: Partial<SavedState> | null;
+    try {
+      cloud = await loadCloudProgress(user);
+    } catch (err) {
+      // A failed read is not the same as a new account. Never overwrite cloud data with defaults.
+      console.warn("Could not load cloud progress; leaving remote data untouched.", err);
+      if (sequence === authLoadSequence.current && cloudUserRef.current?.uid === user.uid) {
+        setSaved(normalizeState(emptyState));
+        setPage("home");
+      }
+      return;
+    }
+
+    // Ignore late responses from an account that is no longer active.
+    if (sequence !== authLoadSequence.current || cloudUserRef.current?.uid !== user.uid) return;
+
     const next = normalizeState({
       ...emptyState,
       ...(cloud || {}),
