@@ -5,6 +5,7 @@ import App from "./App";
 import "./index.css";
 import "./auth-modal.css";
 import "./polish.css";
+import "./ux-a11y.css";
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

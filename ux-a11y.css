@@ -1,0 +1,132 @@
+/* Accessibility + CEFR chips — additive only */
+
+.a11y-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px;
+  border-radius: 999px;
+  background: rgba(243, 240, 255, 0.7);
+  border: 1px solid #eeedf6;
+}
+
+.a11y-controls .font-toggle,
+.a11y-controls .theme-toggle {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 999px;
+  line-height: 1;
+}
+
+.a11y-controls .font-toggle.is-active {
+  background: #efe9ff;
+  color: #5b3cc4;
+  font-weight: 700;
+}
+
+.cefr-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: #f3f0ff;
+  color: #5b3cc4;
+  border: 1px solid #e0d7ff;
+  vertical-align: middle;
+}
+
+.cefr-tag.mini {
+  font-size: 10px;
+  padding: 1px 6px;
+  min-width: 1.6em;
+}
+
+.cefr-tag[data-level="A0"],
+.cefr-tag[data-level="A1"] {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.cefr-tag[data-level="A2"],
+.cefr-tag[data-level="B1"] {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.cefr-tag[data-level="B2"],
+.cefr-tag[data-level="C1"],
+.cefr-tag[data-level="C2"] {
+  background: #faf5ff;
+  color: #7c3aed;
+  border-color: #e9d5ff;
+}
+
+.level-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 4px 0;
+}
+
+.level-filter-chip {
+  min-height: 40px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #eeedf6;
+  background: #fbfbfe;
+  cursor: pointer;
+  font-size: 13px;
+  color: #5c5c72;
+}
+
+.level-filter-chip:hover {
+  border-color: #cbbdff;
+  background: #f7f4ff;
+}
+
+.level-filter-chip.is-active {
+  border-color: #cbbdff;
+  background: #f3f0ff;
+  color: #5b3cc4;
+  font-weight: 600;
+}
+
+.app-shell.dark-mode .a11y-controls {
+  background: rgba(40, 40, 55, 0.8);
+  border-color: #3a3a4d;
+}
+
+.app-shell.dark-mode .level-filter-chip {
+  background: #1f1f2a;
+  border-color: #3a3a4d;
+  color: #d4d4e0;
+}
+
+.app-shell.dark-mode .level-filter-chip.is-active {
+  background: #2a2440;
+  border-color: #6b5bb5;
+  color: #cbbdff;
+}
+
+@media (max-width: 720px) {
+  .a11y-controls {
+    order: -1;
+  }
+  .top-actions.a11y-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .level-filter-chip {
+    min-height: 44px;
+  }
+}
