@@ -3,6 +3,7 @@ import type { User } from "firebase/auth";
 import FirebaseAccount from "./FirebaseAccount";
 import "./App.css";
 import StageAssessment from "./StageAssessment";
+import PlacementTest from "./PlacementTest";
 import ListeningPractice from "./ListeningPractice";
 import SpeakingPractice from "./SpeakingPractice";
 import DailyLearning from "./DailyLearning";
@@ -490,23 +491,27 @@ function App() {
 
       {page === "placement" && isLoggedIn && (
         <main id="main-content" className="section-container" style={{ paddingTop: 24, paddingBottom: 48 }}>
-          <div className="panel" style={{ maxWidth: 560, margin: "0 auto" }}>
-            <span className="eyebrow">گام ۲ از ۲ · {langLabel}</span>
-            <h1 style={{ marginTop: 8 }}>تعیین سطح {langLabel}</h1>
-            <p>اگر هیچ چیز بلد نیستی <strong>A0</strong> را بزن.</p>
-            <div className="level-choice" style={{ marginTop: 16 }}>
-              {LEVELS.map((level) => {
-                const hasLessons = lessons.some((l) => l.level === level);
-                return (
-                  <button key={level} type="button" className="level-choice-btn" disabled={!hasLessons} style={level === "A0" ? { borderColor: "#7c5cff" } : undefined} onClick={() => applyPlacement(level)}>
-                    <strong>{level} — {LEVEL_META[level].title}</strong>
-                    <span>{hasLessons ? LEVEL_META[level].desc : "به‌زودی"}</span>
-                  </button>
-                );
-              })}
+          {targetLang === "en" ? (
+            <PlacementTest onComplete={applyPlacement} />
+          ) : (
+            <div className="panel" style={{ maxWidth: 560, margin: "0 auto" }}>
+              <span className="eyebrow">گام ۲ از ۲ · {langLabel}</span>
+              <h1 style={{ marginTop: 8 }}>تعیین سطح {langLabel}</h1>
+              <p>اگر هیچ چیز بلد نیستی <strong>A0</strong> را بزن.</p>
+              <div className="level-choice" style={{ marginTop: 16 }}>
+                {LEVELS.map((level) => {
+                  const hasLessons = lessons.some((l) => l.level === level);
+                  return (
+                    <button key={level} type="button" className="level-choice-btn" disabled={!hasLessons} style={level === "A0" ? { borderColor: "#7c5cff" } : undefined} onClick={() => applyPlacement(level)}>
+                      <strong>{level} — {LEVEL_META[level].title}</strong>
+                      <span>{hasLessons ? LEVEL_META[level].desc : "به‌زودی"}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <button type="button" className="button button-ghost" style={{ marginTop: 16 }} onClick={() => go("choose-lang")}>← تغییر زبان</button>
             </div>
-            <button type="button" className="button button-ghost" style={{ marginTop: 16 }} onClick={() => go("choose-lang")}>← تغییر زبان</button>
-          </div>
+          )}
         </main>
       )}
 
