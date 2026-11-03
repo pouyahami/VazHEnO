@@ -18,5 +18,5 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm install
-      - name: Build website
-        run: npm run build
+      - name: Run type, content, and production build checks
+        run: npm run ci
