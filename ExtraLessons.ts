@@ -88,55 +88,45 @@ const TOPICS: Topic[] = [
   { level: "C1", title: "جمع‌بندی", category: "نوشتار", explanation: "Overall برای جمع‌بندی کلی مناسب است.", example: "Overall, consistent practice remains essential.", translation: "در مجموع تمرین منظم ضروری می‌ماند.", tip: "Overall جمع‌بندی می‌کند." },
 ];
 
-function buildLesson(topic: Topic, variant: number, serial: number): ExtraLesson {
-  const id = `${topic.level.toLowerCase()}-gen-${serial}`;
-  const minutes = 10 + (variant % 3) * 2 + ["A0", "A1", "A2", "B1", "B2", "C1"].indexOf(topic.level);
-  const title = variant === 0 ? topic.title : `${topic.title} (تمرین ${variant + 1})`;
-  const explanation =
-    variant === 0 ? topic.explanation : `${topic.explanation} این بخش تمرین عمیق‌تر همان مفهوم است.`;
+/** شمارندهٔ پایدار برای چیدمان قطعی گزینه‌ها (بدون Math.random تا رندر و تست قابل‌تکرار باشد) */
+function rotate<T>(items: T[], by: number): T[] {
+  const n = items.length;
+  const k = ((by % n) + n) % n;
+  return [...items.slice(k), ...items.slice(0, k)];
+}
 
-  let question = `کدام گزینه با موضوع «${topic.title}» هم‌خوان است؟`;
-  let options = [topic.example, "I goed yesterday.", "She can sings well.", "He have a car."];
-  let answer = topic.example;
-
-  if (variant === 1) {
-    question = "نکتهٔ کلیدی این درس چیست؟";
-    options = [topic.tip, "همیشه از will استفاده کن", "صفت همیشه بعد از اسم است", "افعال وجهی to می‌گیرند"];
-    answer = topic.tip;
-  } else if (variant === 2) {
-    question = "معنی تقریبی مثال درس چیست؟";
-    options = [topic.translation, "نامفهوم", "مخالف معنی", "بدون ترجمه"];
-    answer = topic.translation;
-  } else if (variant === 3) {
-    question = "کدام جمله با توضیح درس سازگارتر است؟";
-    options = [topic.example, "Yesterday I go home.", "He can to swim.", "She have hungry."];
-    answer = topic.example;
-  }
-
-  const firstWord = topic.example.replace(/[^\w\s]/g, " ").split(/\s+/).find((w) => w.length > 3) || "practice";
+/**
+ * برای هر موضوع دقیقاً یک درس با یک پرسش واقعی ساخته می‌شود:
+ * «معنی جملهٔ مثال چیست؟» و گزینه‌های نادرست ترجمهٔ جملهٔ مثال سایر موضوع‌های همان سطح‌اند.
+ * به این ترتیب پاسخ درست یکتاست و هیچ گزینهٔ ساختگی یا بی‌معنی وجود ندارد.
+ */
+function buildLesson(topic: Topic, topicIndex: number): ExtraLesson {
+  const levels = ["A0", "A1", "A2", "B1", "B2", "C1"];
+  const sameLevel = TOPICS.filter((t) => t.level === topic.level && t.translation !== topic.translation);
+  const pool = sameLevel.length >= 3 ? sameLevel : TOPICS.filter((t) => t.translation !== topic.translation);
+  const distractors = rotate(pool, topicIndex * 7 + 1)
+    .map((t) => t.translation)
+    .filter((value, index, all) => all.indexOf(value) === index)
+    .slice(0, 3);
+  const options = rotate([topic.translation, ...distractors], topicIndex);
 
   return {
-    id,
+    id: `${topic.level.toLowerCase()}-x-${String(topicIndex + 1).padStart(2, "0")}`,
     level: topic.level,
-    title,
+    title: topic.title,
     category: topic.category,
-    minutes,
-    explanation,
+    minutes: 8 + levels.indexOf(topic.level),
+    explanation: topic.explanation,
     example: topic.example,
     translation: topic.translation,
     tip: topic.tip,
-    question,
+    question: `معنی جملهٔ زیر کدام است؟  «${topic.example}»`,
     options,
-    answer,
-    feedback: `پاسخ درست بر اساس نکتهٔ درس: ${topic.tip}`,
-    words: [
-      { word: firstWord.toLowerCase(), meaning: "واژهٔ درس", example: topic.example },
-      { word: "practice", meaning: "تمرین", example: "Practice every day." },
-    ],
+    answer: topic.translation,
+    feedback: `درست است: «${topic.translation}». نکته: ${topic.tip}`,
+    words: [],
   };
 }
 
-/** ~240 extra lessons so total content approaches 500 with base + expanded */
-export const extraLessons: ExtraLesson[] = TOPICS.flatMap((topic, topicIndex) =>
-  [0, 1, 2, 3].map((variant) => buildLesson(topic, variant, topicIndex * 4 + variant + 1))
-);
+/** ۶۰ درس تکمیلی؛ هر موضوع یک بار و بدون نسخهٔ تکراری. */
+export const extraLessons: ExtraLesson[] = TOPICS.map((topic, index) => buildLesson(topic, index));

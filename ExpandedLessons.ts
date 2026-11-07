@@ -1,24 +1,24 @@
-type Lesson = {
-  id: string; level: "A0" | "A1" | "A2" | "B1" | "B2" | "C1"; title: string; category: string; minutes: number;
-  explanation: string; example: string; translation: string; tip: string; question: string; options: string[]; answer: string; feedback: string;
-  words: { word: string; meaning: string; example: string }[];
-};
+import type { Lesson, LessonWord } from "./types";
+
+type Part = string | string[] | LessonWord[];
+
+function isWordList(part: Part | undefined): part is LessonWord[] {
+  return Array.isArray(part) && part.every((item) => typeof item === "object" && item !== null);
+}
 
 function lesson(
   id: string, level: Lesson["level"], title: string, category: string, minutes: number,
   explanation: string, example: string, translation: string, tip: string,
-  question: string, ...parts: Array<string | Lesson["words"]>
+  question: string, ...parts: Part[]
 ): Lesson {
-  // Lesson entries may list answer choices as separate strings or as one array.
-  // Keep the final three parts as answer, feedback, and vocabulary.
+  // آخرین سه بخش همیشه: پاسخ، بازخورد و واژگان؛ بقیه گزینه‌ها هستند.
   const wordsPart = parts[parts.length - 1];
   const feedbackPart = parts[parts.length - 2];
   const answerPart = parts[parts.length - 3];
-  const optionParts = parts.slice(0, -3);
-  const options = optionParts.flatMap((part) =>
-    Array.isArray(part) ? part as string[] : [part as string]
-  );
-  const words = Array.isArray(wordsPart) ? wordsPart as Lesson["words"] : [];
+  const options = parts
+    .slice(0, -3)
+    .flatMap((part) => (Array.isArray(part) ? (part as string[]) : [part as string]));
+  const words = isWordList(wordsPart) ? wordsPart : [];
   const answer = typeof answerPart === "string" ? answerPart : "";
   const feedback = typeof feedbackPart === "string" ? feedbackPart : "";
   return { id, level, title, category, minutes, explanation, example, translation, tip, question, options, answer, feedback, words };
@@ -70,8 +70,8 @@ export const expandedLessons: Lesson[] = [
   lesson("a1-23","A1","حروف اضافهٔ مکان","واژگان و دستور زبان",9,"in برای داخل، on برای روی سطح و under برای زیر به کار می‌روند. کاربرد دقیق با عبارت و موقعیت یاد گرفته می‌شود.","The keys are on the table.","کلیدها روی میز هستند.","مکان را در تصویر تصور کن و رابطهٔ اشیا را مشخص کن.","The cat is ___ the table (زیر میز).","in","on","under","between","under","under یعنی زیر.",[{word:"under",meaning:"زیر",example:"The bag is under the chair."},{word:"between",meaning:"بین",example:"Sit between us."}]),
   lesson("a2-21","A2","گذشتهٔ سادهٔ فعل‌های باقاعده","دستور زبان",11,"برای بسیاری از فعل‌ها در گذشتهٔ ساده ed اضافه می‌شود؛ املای برخی فعل‌ها تغییر می‌کند. زمان مشخصی مثل yesterday اغلب نشانهٔ گذشته است.","We visited our friends yesterday.","ما دیروز به دیدن دوستانمان رفتیم.","تلفظ پایان ed همیشه یکسان نیست.","Yesterday, I ___ my room.","clean","cleaned","cleaning","cleans","cleaned","yesterday نشان می‌دهد فعل باید در گذشته باشد.",[{word:"visited",meaning:"دیدار کرد",example:"I visited my aunt."},{word:"yesterday",meaning:"دیروز",example:"We arrived yesterday."}]),
   lesson("a2-22","A2","مقایسهٔ صفت‌ها","دستور زبان",10,"برای بسیاری از صفت‌های کوتاه، er و برای مقایسهٔ برتر از the و est استفاده می‌کنیم. صفت‌های بلند معمولاً با more و the most می‌آیند.","This road is longer than that road.","این جاده از آن جاده طولانی‌تر است.","پس از comparative معمولاً than می‌آید.","My bag is ___ than yours.","heavy","heavier","heaviest","more heavy","heavier","در heavy، y به i تبدیل می‌شود و er می‌گیرد.",[{word:"cheaper",meaning:"ارزان‌تر",example:"This one is cheaper."},{word:"the fastest",meaning:"سریع‌ترین",example:"It is the fastest train."}]),
-  lesson("b1-21","B1","شرطی نوع اول","دستور زبان",12,"شرطی نوع اول دربارهٔ نتیجه‌ای محتمل در آینده است. در بخش شرط معمولاً حال ساده و در نتیجه will استفاده می‌شود.","If it rains, we will stay home.","اگر باران ببارد، خانه می‌مانیم.","در بخش if معمولاً will نمی‌آوریم.","If I have time, I ___ you.","call","called","will call","would called","will call","نتیجهٔ آینده با will بیان می‌شود.",[{word:"unless",meaning:"مگر اینکه",example:"Unless it rains, we'll go."},{word:"likely",meaning:"محتمل",example:"It is likely to happen."}]),
-  lesson("b1-22","B1","ساختار مجهول","دستور زبان",12,"در مجهول، تمرکز بر کاری است که انجام شده یا چیزی که تحت تأثیر قرار گرفته است. از شکل مناسب be به همراه اسم مفعول استفاده می‌کنیم.","The report was written yesterday.","گزارش دیروز نوشته شد.","زمان جمله را در فعل be حفظ کن.","The emails ___ every morning.","send","are sent","sent","are sending","are sent","برای مجهول حال ساده از are + past participle استفاده می‌شود.",[{word:"published",meaning:"منتشرشده",example:"The results were published."},{word:"delivered",meaning:"تحویل‌داده‌شده",example:"The package was delivered."}]),
+  lesson("b1-21","B1","شرطی نوع اول","دستور زبان",12,"شرطی نوع اول دربارهٔ نتیجه‌ای محتمل در آینده است. در بخش شرط معمولاً حال ساده و در نتیجه will استفاده می‌شود.","If it rains, we will stay home.","اگر باران ببارد، خانه می‌مانیم.","در بخش if معمولاً will نمی‌آوریم.","If it ___ tomorrow, we will cancel the picnic.","rains","will rain","rained","would rain","rains","در بخش if شرطی نوع اول از حال ساده استفاده می‌کنیم: If it rains، نه If it will rain.",[{word:"unless",meaning:"مگر اینکه",example:"Unless it rains, we'll go."},{word:"likely",meaning:"محتمل",example:"It is likely to happen."}]),
+  lesson("b1-22","B1","ساختار مجهول","دستور زبان",12,"در مجهول، تمرکز بر کاری است که انجام شده یا چیزی که تحت تأثیر قرار گرفته است. از شکل مناسب be به همراه اسم مفعول استفاده می‌کنیم.","The report was written yesterday.","گزارش دیروز نوشته شد.","زمان جمله را در فعل be حفظ کن.","The report ___ by the manager yesterday.","wrote","was written","is written","has writing","was written","yesterday گذشتهٔ ساده می‌خواهد؛ مجهول آن was/were + اسم مفعول است: was written.",[{word:"published",meaning:"منتشرشده",example:"The results were published."},{word:"delivered",meaning:"تحویل‌داده‌شده",example:"The package was delivered."}]),
   lesson("b2-21","B2","پیونددهنده‌های تضاد و امتیاز","نوشتن",13,"although و even though یک تضاد را معرفی می‌کنند؛ however معمولاً میان دو جمله می‌آید و به نشانه‌گذاری نیاز دارد.","Although it was expensive, I bought it.","با اینکه گران بود، آن را خریدم.","although و but را معمولاً در یک ساختار واحد کنار هم نیاور.","___ the delay, we finished on time.","Despite","Although","However","Because","Despite","despite با اسم یا گروه اسمی می‌آید؛ the delay یک گروه اسمی است.",[{word:"nevertheless",meaning:"با این حال",example:"It was difficult; nevertheless, we continued."},{word:"whereas",meaning:"در حالی که",example:"I prefer tea, whereas he likes coffee."}]),
   lesson("c1-21","C1","زبان محتاطانه در نوشتار دانشگاهی","نوشتن آکادمیک",15,"در نوشتار دانشگاهی، ادعاها باید متناسب با شواهد باشند. عباراتی مانند may suggest و appears to indicate از قطعیت بیش از حد جلوگیری می‌کنند.","The findings may suggest a link between sleep and memory.","یافته‌ها ممکن است نشان‌دهندهٔ ارتباطی میان خواب و حافظه باشند.","میزان قطعیت را با قدرت شواهد هماهنگ کن.","کدام عبارت محتاطانه‌تر است؟","This proves everything.","The results may indicate a trend.","It is always true.","No doubt whatsoever.","The results may indicate a trend.","این عبارت نتیجه را احتمالی بیان می‌کند و ادعای قطعی نمی‌سازد.",[{word:"indicate",meaning:"نشان دادن",example:"The data may indicate a change."},{word:"evidence",meaning:"شواهد",example:"We need more evidence."}]),,
 lesson("a0-45","A0","الفبای انگلیسی: واکه‌ها","الفبا و صداها",8,"پنج حرف واکه در الفبای انگلیسی A, E, I, O, U هستند؛ اما هر کدام چند صدای رایج دارند. فعلاً شکل حرف و نمونهٔ ساده را یاد بگیر.","A a — apple · E e — egg · I i — insect","A مثل apple یعنی سیب؛ E مثل egg یعنی تخم‌مرغ؛ I مثل insect یعنی حشره.","نام حرف با صدای آن در کلمه یکی نیست؛ بعداً صداها را جداگانه تمرین می‌کنیم.","کدام حرف در واژهٔ egg در آغاز دیده می‌شود؟","A","E","I","O","E","egg با حرف E شروع می‌شود.",[{word:"apple",meaning:"سیب",example:"A is for apple."},{word:"egg",meaning:"تخم‌مرغ",example:"E is for egg."}]),
